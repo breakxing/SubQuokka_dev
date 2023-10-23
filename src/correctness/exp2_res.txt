@@ -1,0 +1,9 @@
+[Circuit File]: ../qft/opt21.txt
+[Config File]: res.ini
+0.105621s
+[Circuit File]: ../qft/opt24.txt
+[Config File]: res.ini
+0.727873s
+[Circuit File]: ../qft/opt27.txt
+[Config File]: res.ini
+6.02569s

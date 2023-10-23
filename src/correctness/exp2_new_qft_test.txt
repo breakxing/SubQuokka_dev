@@ -1,0 +1,192 @@
+[Circuit File]: ../qft/origin_qft21.txt
+[Config File]: res.ini
+0.0493411s
+0.049388s
+[Circuit File]: ../qft/origin_qft24.txt
+[Config File]: res.ini
+0.848036s
+0.84817s
+[Circuit File]: ../qft/origin_qft27.txt
+[Config File]: res.ini
+5.98566s
+5.98577s
+[Circuit File]: ../qft/origin_qft30.txt
+[Config File]: res.ini
+56.3852s
+56.3853s
+[Circuit File]: ../qft/sub_qft21.txt
+[Config File]: res.ini
+0.0437847s
+[Circuit File]: ../qft/sub_qft24.txt
+[Config File]: res.ini
+0.512343s
+[Circuit File]: ../qft/sub_qft27.txt
+[Config File]: res.ini
+4.82638s
+[Circuit File]: ../qft/sub_qft30.txt
+[Config File]: res.ini
+40.4269s
+
+
+
+[Circuit File]: ../qft/origin_qft21.txt
+[Config File]: res.ini
+0.0498317s
+0.0498865s
+[Circuit File]: ../qft/origin_qft24.txt
+[Config File]: res.ini
+0.843002s
+0.843144s
+[Circuit File]: ../qft/origin_qft27.txt
+[Config File]: res.ini
+6.00236s
+6.00249s
+[Circuit File]: ../qft/origin_qft30.txt
+[Config File]: res.ini
+56.4906s
+56.4907s
+[Circuit File]: ../qft/sub_qft21.txt
+[Config File]: res.ini
+0.0442789s
+[Circuit File]: ../qft/sub_qft24.txt
+[Config File]: res.ini
+0.516002s
+[Circuit File]: ../qft/sub_qft27.txt
+[Config File]: res.ini
+4.82758s
+[Circuit File]: ../qft/sub_qft30.txt
+[Config File]: res.ini
+40.4907s
+[Circuit File]: ../qft/opt_qft21.txt
+[Config File]: res.ini
+0.030046s
+[Circuit File]: ../qft/opt_qft24.txt
+[Config File]: res.ini
+0.331845s
+[Circuit File]: ../qft/opt_qft27.txt
+[Config File]: res.ini
+3.27914s
+[Circuit File]: ../qft/opt_qft30.txt
+[Config File]: res.ini
+25.8735s
+
+
+
+[static]
+[Circuit File]: ../qft/opt_qft21.txt
+[Config File]: res.ini
+0.0225097s
+[Circuit File]: ../qft/opt_qft24.txt
+[Config File]: res.ini
+0.0775684s
+[Circuit File]: ../qft/opt_qft27.txt
+[Config File]: res.ini
+0.633917s
+[Circuit File]: ../qft/opt_qft30.txt
+[Config File]: res.ini
+5.49197s
+[Circuit File]: ../qft/origin_qft21.txt
+[Config File]: res.ini
+0.0256019s
+[Circuit File]: ../qft/origin_qft24.txt
+[Config File]: res.ini
+0.356211s
+[Circuit File]: ../qft/origin_qft27.txt
+[Config File]: res.ini
+5.79443s
+[Circuit File]: ../qft/origin_qft30.txt
+[Config File]: res.ini
+54.798s
+[Circuit File]: ../qft/sub_qft21.txt
+[Config File]: res.ini
+0.0328961s
+[Circuit File]: ../qft/sub_qft24.txt
+[Config File]: res.ini
+0.139833s
+[Circuit File]: ../qft/sub_qft27.txt
+[Config File]: res.ini
+1.25113s
+[Circuit File]: ../qft/sub_qft30.txt
+[Config File]: res.ini
+11.2701s
+
+
+IO
+[Circuit File]: ../qft/origin_qft21.txt
+[Config File]: res.ini
+0.21054s
+[Circuit File]: ../qft/origin_qft24.txt
+[Config File]: res.ini
+1.78365s
+[Circuit File]: ../qft/origin_qft27.txt
+[Config File]: res.ini
+20.133s
+[Circuit File]: ../qft/origin_qft30.txt
+[Config File]: res.ini
+188.164s
+[Circuit File]: ../qft/origin_qft21.txt
+[Config File]: res.ini
+0.20886s
+[Circuit File]: ../qft/origin_qft24.txt
+[Config File]: res.ini
+1.73375s
+[Circuit File]: ../qft/origin_qft27.txt
+[Config File]: res.ini
+20.0871s
+[Circuit File]: ../qft/origin_qft30.txt
+[Config File]: res.ini
+188.171s
+
+[Circuit File]: ../qft/subNew_qft21.txt
+[Config File]: res.ini
+0.0576553s
+[Circuit File]: ../qft/subNew_qft24.txt
+[Config File]: res.ini
+0.340491s
+[Circuit File]: ../qft/subNew_qft27.txt
+[Config File]: res.ini
+3.13987s
+[Circuit File]: ../qft/subNew_qft30.txt
+[Config File]: res.ini
+27.0805s
+[Circuit File]: ../qft/opt_qft21.txt
+[Config File]: res.ini
+0.0409202s
+[Circuit File]: ../qft/opt_qft24.txt
+[Config File]: res.ini
+0.108331s
+[Circuit File]: ../qft/opt_qft27.txt
+[Config File]: res.ini
+0.784988s
+[Circuit File]: ../qft/opt_qft30.txt
+[Config File]: res.ini
+6.78639s
+
+IO N=32
+[Circuit File]: ../qft/origin_qft32.txt
+[Config File]: res.ini
+1534.51s
+[Circuit File]: ../qft/subNew_qft32.txt
+[Config File]: res.ini
+278.682s
+[Circuit File]: ../qft/opt_qft32.txt
+[Config File]: res.ini
+88.2879s
+
+
+MEM N=32
+[Circuit File]: ../qft/origin_qft32.txt
+[Config File]: res.ini
+245.675s
+[Circuit File]: ../qft/subNew_qft32.txt
+[Config File]: res.ini
+45.9041s
+[Circuit File]: ../qft/opt_qft32.txt
+[Config File]: res.ini
+23.4103s
+
+
+IO N=32
+[Circuit File]: ../qft/origin_qft32.txt
+[Config File]: res.ini
+1754.31s

@@ -1,0 +1,3 @@
+[Config File]: ../circuit/ideal/32/gpu.ini
+[Circuit File]: ../circuit/ideal/32/rzz32.txt
+5.2523s

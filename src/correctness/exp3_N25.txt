@@ -1,0 +1,77 @@
+300 CPhase gate
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+1.07484s
+
+QuEST
+0.776608s
+0.770292s
+
+12 Swap gate
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.0832382s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.156989s
+
+QuEST
+0.079470s
+0.079470s
+
+
+20 H gate
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.234081s
+
+QuEST
+0.234363s
+0.243066s
+
+
+
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.157776s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.155231s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.15846s
+0.158599s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.146566s
+0.146685s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.143705s
+0.143803s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.151664s
+0.151769s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.151896s
+0.152004s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.144035s
+0.144158s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.148711s
+0.148914s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.150857s
+0.150938s
+[Circuit File]: cir_phase_25.txt
+[Config File]: res.ini
+0.151811s
+0.151892s
+
+

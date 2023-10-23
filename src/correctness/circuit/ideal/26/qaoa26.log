@@ -1,0 +1,3 @@
+[Config File]: ../circuit/ideal/26/gpu.ini
+[Circuit File]: ../circuit/ideal/26/qaoa26.txt
+3.40673s

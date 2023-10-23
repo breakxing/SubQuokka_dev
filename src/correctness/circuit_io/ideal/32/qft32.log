@@ -1,0 +1,3 @@
+[Config File]: ../circuit_io/ideal/32/cpu.ini
+[Circuit File]: ../circuit_io/ideal/32/qft32.txt
+39.3954s

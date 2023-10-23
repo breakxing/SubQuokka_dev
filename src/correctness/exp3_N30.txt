@@ -1,0 +1,32 @@
+swap 15
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+7.19594s
+7.19602s
+
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+3.0598s
+3.05996s
+
+CPhase
+
+
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+44.382s
+44.3821s
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+44.3308s
+44.3309s
+[Circuit File]: ../qft/origin_qft30.txt
+[Config File]: res.ini
+56.1658s
+56.1659s
+[Circuit File]: ../qft/sub_qft30.txt
+[Config File]: res.ini
+40.3338s
+[Circuit File]: ../qft/sub_qft30.txt
+[Config File]: res.ini
+40.3127s

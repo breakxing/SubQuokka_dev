@@ -1,0 +1,25 @@
+[Circuit File]: ../qft/qft21.txt
+[Config File]: res.ini
+0.108308s
+[Circuit File]: ../qft/qft24.txt
+[Config File]: res.ini
+0.719441s
+[Circuit File]: ../qft/qft27.txt
+[Config File]: res.ini
+9.46205s
+[Circuit File]: ../qft/qft30.txt
+[Config File]: res.ini
+96.6616s
+[Circuit File]: ../qft/qft21.txt
+[Config File]: res.ini
+0.0660514s
+[Circuit File]: ../qft/qft24.txt
+[Config File]: res.ini
+1.11636s
+[Circuit File]: ../qft/qft27.txt
+[Config File]: res.ini
+14.9007s
+[Circuit File]: ../qft/qft30.txt
+[Config File]: res.ini
+153.738s
+

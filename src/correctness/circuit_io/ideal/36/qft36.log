@@ -1,0 +1,3 @@
+[Config File]: ../circuit_io/ideal/36/cpu.ini
+[Circuit File]: ../circuit_io/ideal/36/qft36.txt
+790.958s

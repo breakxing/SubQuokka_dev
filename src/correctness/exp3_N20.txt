@@ -1,0 +1,27 @@
+190 CPhase gate
+[Circuit File]: cir_phase_20.txt
+[Config File]: res.ini
+0.029955s
+
+QuEST
+0.010895s
+0.011151s
+
+
+10 Swap gate
+[Circuit File]: cir_phase_20.txt
+[Config File]: res.ini
+0.00444218s
+
+QuEST
+0.001232s
+0.001292s
+
+
+20 H gate
+[Circuit File]: cir_phase_20.txt
+[Config File]: res.ini
+0.00684857s
+
+QuEST
+0.002330s

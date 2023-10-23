@@ -1,0 +1,3 @@
+[Config File]: ../circuit/ideal/33/gpu.ini
+[Circuit File]: ../circuit/ideal/33/qaoa33.txt
+822.218s

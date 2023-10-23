@@ -1,0 +1,3 @@
+[Config File]: ../circuit/ideal/24/gpu.ini
+[Circuit File]: ../circuit/ideal/24/qaoa24.txt
+0.715062s

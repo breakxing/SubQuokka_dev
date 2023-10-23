@@ -1,0 +1,92 @@
+SWAP 10
+0.622654s
+
+CP 210
+1.37972s
+
+H21
+0.617702s
+
+H21
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+0.0248088s
+
+CP 210
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+0.130011s
+
+SWAP 10
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+0.0198493s
+
+ALL
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+0.135916s
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+53.5445s
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+2.30415s
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+[Circuit File]: ../qft/subNew_qft24.txt
+[Config File]: res.ini
+[Circuit File]: ../qft/subNew_qft24.txt
+[Config File]: res.ini
+[Circuit File]: ../qft/subNew_qft24.txt
+[Config File]: res.ini
+[Circuit File]: ../qft/subNew_qft24.txt
+[Config File]: res.ini
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+[Circuit File]: ../qft/subNew_qft24.txt
+[Config File]: res.ini
+0.150293s
+[Circuit File]: ../qft/origin_qft24.txt
+[Config File]: res.ini
+[Circuit File]: ../qft/origin_qft24.txt
+[Config File]: res.ini
+0.437621s
+[Circuit File]: ../qft/origin_qft24.txt
+[Config File]: res.ini
+0.441895s
+[Circuit File]: ../qft/origin_qft24.txt
+[Config File]: res.ini
+0.47364s
+[Circuit File]: ../qft/origin_qft27.txt
+[Config File]: res.ini
+7.05073s
+[Circuit File]: ../qft/origin_qft27.txt
+[Config File]: res.ini
+7.38007s
+[Circuit File]: ../qft/origin_qft27.txt
+[Config File]: res.ini
+7.50057s
+[Circuit File]: ../qft/origin_qft30.txt
+[Config File]: res.ini
+[Circuit File]: ../qft/origin_qft30.txt
+[Config File]: res.ini
+[Circuit File]: ../qft/origin_qft27.txt
+[Config File]: res.ini
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+1.81193s
+
+N24
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+2.45386s
+
+N27
+[Circuit File]: cir_phase_30.txt
+[Config File]: res.ini
+28.9569s

@@ -1,0 +1,54 @@
+[Circuit File]: cir.txt
+[Config File]: res.ini
+[Circuit File]: cir.txt
+[Config File]: res.ini
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+[Circuit File]: cir.txt
+[Config File]: res.ini
+3.73936s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+3.76677s
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+0.632654s
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+0.805388s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+3.75667s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+3.85807s
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+0.651369s
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+0.793082s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+3.72965s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+0.662034s
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+[Circuit File]: cir.txt
+[Config File]: res.ini
+3.7302s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+3.84965s
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+0.647419s
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+0.666524s

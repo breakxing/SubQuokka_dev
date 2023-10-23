@@ -1,0 +1,3 @@
+[Config File]: ../circuit/ideal/28/gpu.ini
+[Circuit File]: ../circuit/ideal/28/qft28.txt
+1.08174s

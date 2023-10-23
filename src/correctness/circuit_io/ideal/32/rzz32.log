@@ -1,0 +1,3 @@
+[Config File]: ../circuit_io/ideal/32/cpu.ini
+[Circuit File]: ../circuit_io/ideal/32/rzz32.txt
+8.08122s

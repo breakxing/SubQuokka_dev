@@ -1,0 +1,19 @@
+N=21
+[Circuit File]: cir.txt
+[Config File]: res.ini
+0.243604s
+
+N=24
+[Circuit File]: cir.txt
+[Config File]: res.ini
+1.96721s
+
+N=27
+[Circuit File]: cir.txt
+[Config File]: res.ini
+21.1103s
+
+N=30
+[Circuit File]: cir.txt
+[Config File]: res.ini
+196.639s

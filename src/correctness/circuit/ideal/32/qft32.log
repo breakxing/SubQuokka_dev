@@ -1,0 +1,3 @@
+[Config File]: ../circuit/ideal/32/gpu.ini
+[Circuit File]: ../circuit/ideal/32/qft32.txt
+23.3534s

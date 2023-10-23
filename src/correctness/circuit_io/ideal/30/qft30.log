@@ -1,0 +1,3 @@
+[Config File]: ../circuit_io/ideal/30/gpu.ini
+[Circuit File]: ../circuit_io/ideal/30/qft30.txt
+7.7319s

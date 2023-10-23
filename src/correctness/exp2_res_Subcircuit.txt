@@ -1,0 +1,19 @@
+N=21
+[Circuit File]: ../qft/sub21.txt
+[Config File]: res.ini
+0.134332s
+
+N=24
+[Circuit File]: ../qft/sub24.txt
+[Config File]: res.ini
+0.982645s
+
+N=27
+[Circuit File]: ../qft/sub27.txt
+[Config File]: res.ini
+8.37401s
+
+N=30
+[Circuit File]: ../qft/sub30.txt
+[Config File]: res.ini
+79.5935s

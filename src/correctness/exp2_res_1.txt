@@ -1,0 +1,11 @@
+[Circuit File]: cir.txt
+[Config File]: res.ini
+0.21942s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+1.94223s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+21.1497s
+[Circuit File]: cir.txt
+[Config File]: res.ini

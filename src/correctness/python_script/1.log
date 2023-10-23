@@ -1,0 +1,204 @@
+[Config File]: ../circuit/ori/25/cpu.ini
+[Circuit File]: ../circuit/ori/25/qaoa25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+0
+17.2313s
+
+ Performance counter stats for 'system wide':
+
+      51,4322,5155      cache-misses              #   16.691 % of all cache refs    
+     308,1476,8222      cache-references                                            
+
+      17.550529485 seconds time elapsed
+
+[Config File]: ../circuit/sub/25/cpu.ini
+[Circuit File]: ../circuit/sub/25/qaoa25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+1
+11.7838s
+
+ Performance counter stats for 'system wide':
+
+       5,5765,2235      cache-misses              #    3.010 % of all cache refs    
+     185,2858,7611      cache-references                                            
+
+      12.134263641 seconds time elapsed
+
+[Config File]: ../circuit/ideal/25/cpu.ini
+[Circuit File]: ../circuit/ideal/25/qaoa25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+1
+10.6293s
+
+ Performance counter stats for 'system wide':
+
+       1,3118,1184      cache-misses              #    0.852 % of all cache refs    
+     154,0178,3929      cache-references                                            
+
+      10.968758363 seconds time elapsed
+
+[Config File]: ../circuit_io/ori/25/cpu.ini
+[Circuit File]: ../circuit_io/ori/25/qaoa25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+0
+28.7986s
+
+ Performance counter stats for 'system wide':
+
+     121,3344,1600      cache-misses              #   10.486 % of all cache refs    
+    1157,0974,4590      cache-references                                            
+
+      28.906579402 seconds time elapsed
+
+[Config File]: ../circuit_io/sub/25/cpu.ini
+[Circuit File]: ../circuit_io/sub/25/qaoa25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+1
+16.2404s
+
+ Performance counter stats for 'system wide':
+
+      17,7404,5232      cache-misses              #    5.480 % of all cache refs    
+     323,7332,7910      cache-references                                            
+
+      16.373726090 seconds time elapsed
+
+[Config File]: ../circuit_io/ideal/25/cpu.ini
+[Circuit File]: ../circuit_io/ideal/25/qaoa25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+1
+11.1032s
+
+ Performance counter stats for 'system wide':
+
+       2,3550,5186      cache-misses              #    1.256 % of all cache refs    
+     187,5215,5515      cache-references                                            
+
+      11.237337519 seconds time elapsed
+
+[Config File]: ../circuit/ori/25/cpu.ini
+[Circuit File]: ../circuit/ori/25/qft25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+0
+1.20945s
+
+ Performance counter stats for 'system wide':
+
+       3,8539,8388      cache-misses              #   16.868 % of all cache refs    
+      22,8481,0304      cache-references                                            
+
+       1.523362855 seconds time elapsed
+
+[Config File]: ../circuit/sub/25/cpu.ini
+[Circuit File]: ../circuit/sub/25/qft25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+1
+1.05533s
+
+ Performance counter stats for 'system wide':
+
+       1,9043,9688      cache-misses              #    8.629 % of all cache refs    
+      22,0702,1014      cache-references                                            
+
+       1.395597246 seconds time elapsed
+
+[Config File]: ../circuit/ideal/25/cpu.ini
+[Circuit File]: ../circuit/ideal/25/qft25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+1
+0.740114s
+
+ Performance counter stats for 'system wide':
+
+         4014,7234      cache-misses              #    2.751 % of all cache refs    
+      14,5951,0889      cache-references                                            
+
+       1.077507539 seconds time elapsed
+
+[Config File]: ../circuit_io/ori/25/cpu.ini
+[Circuit File]: ../circuit_io/ori/25/qft25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+0
+4.67787s
+
+ Performance counter stats for 'system wide':
+
+      22,9274,9958      cache-misses              #   10.485 % of all cache refs    
+     218,6601,2080      cache-references                                            
+
+       4.790313746 seconds time elapsed
+
+[Config File]: ../circuit_io/sub/25/cpu.ini
+[Circuit File]: ../circuit_io/sub/25/qft25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+1
+1.38335s
+
+ Performance counter stats for 'system wide':
+
+       4,8920,9268      cache-misses              #    8.531 % of all cache refs    
+      57,3439,6976      cache-references                                            
+
+       1.515366419 seconds time elapsed
+
+[Config File]: ../circuit_io/ideal/25/cpu.ini
+[Circuit File]: ../circuit_io/ideal/25/qft25.txt
+[Simulator]: Ini setup.
+[Simulator]: Circuit setup.
+[Simulator]: StateFile setup.
+[Simulator]: Ready to go.
+[Simulator]: RUN!!!!!!
+1
+0.759579s
+
+ Performance counter stats for 'system wide':
+
+         5396,4179      cache-misses              #    2.307 % of all cache refs    
+      23,3876,9555      cache-references                                            
+
+       0.890055038 seconds time elapsed
+

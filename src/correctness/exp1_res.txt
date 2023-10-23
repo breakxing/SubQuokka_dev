@@ -1,0 +1,81 @@
+[Circuit File]: cir.txt
+[Config File]: res.ini
+20.7719s
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+2.47649s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+VM: 72260; RSS: 69464
+[Iter 0]: VM: 588608; RSS: 70228
+[Iter 1]: VM: 588608; RSS: 70228
+[Iter 2]: VM: 588608; RSS: 70228
+[Iter 3]: VM: 588608; RSS: 70228
+[Iter 4]: VM: 588608; RSS: 70228
+[Iter 5]: VM: 588608; RSS: 70228
+[Iter 6]: VM: 588608; RSS: 70228
+[Iter 7]: VM: 588608; RSS: 70228
+[Iter 8]: VM: 588608; RSS: 70228
+[Iter 9]: VM: 588608; RSS: 70228
+0.00416829s
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+0.00305695s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+VM: 137796; RSS: 134904
+[Iter 0]: VM: 654144; RSS: 135684
+[Iter 1]: VM: 654144; RSS: 135684
+[Iter 2]: VM: 654144; RSS: 135684
+[Iter 3]: VM: 654144; RSS: 135684
+[Iter 4]: VM: 654144; RSS: 135684
+[Iter 5]: VM: 654144; RSS: 135684
+[Iter 6]: VM: 654144; RSS: 135684
+[Iter 7]: VM: 654144; RSS: 135684
+[Iter 8]: VM: 654144; RSS: 135684
+[Iter 9]: VM: 654144; RSS: 135684
+0.00533115s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+VM: 3.35612e+07; RSS: 3.35584e+07
+[Iter 0]: VM: 3.40775e+07; RSS: 3.35591e+07
+[Iter 1]: VM: 3.40775e+07; RSS: 3.35591e+07
+[Iter 2]: VM: 3.40775e+07; RSS: 3.35591e+07
+[Iter 3]: VM: 3.40775e+07; RSS: 3.35591e+07
+[Iter 4]: VM: 3.40775e+07; RSS: 3.35591e+07
+[Iter 5]: VM: 3.40775e+07; RSS: 3.35591e+07
+[Iter 6]: VM: 3.40775e+07; RSS: 3.35591e+07
+[Iter 7]: VM: 3.40775e+07; RSS: 3.35591e+07
+[Iter 8]: VM: 3.40775e+07; RSS: 3.35591e+07
+[Iter 9]: VM: 3.40775e+07; RSS: 3.35591e+07
+2.89706s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+VM: 1.34224e+08; RSS: 1.34222e+08
+[Iter 0]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 1]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 2]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 3]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 4]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 5]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 6]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 7]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 8]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 9]: VM: 1.34741e+08; RSS: 1.34222e+08
+11.6674s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+VM: 1.34224e+08; RSS: 1.34222e+08
+[Iter 0]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 1]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 2]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 3]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 4]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 5]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 6]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 7]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 8]: VM: 1.34741e+08; RSS: 1.34222e+08
+[Iter 9]: VM: 1.34741e+08; RSS: 1.34222e+08
+11.6669s
+[Circuit File]: cir.txt
+[Config File]: res.ini

@@ -1,0 +1,3 @@
+[Config File]: ../circuit_io/ideal/25/gpu.ini
+[Circuit File]: ../circuit_io/ideal/25/qaoa25.txt
+2.62525s

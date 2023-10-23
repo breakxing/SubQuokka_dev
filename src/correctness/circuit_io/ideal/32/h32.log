@@ -1,0 +1,3 @@
+[Config File]: ../circuit_io/ideal/32/cpu.ini
+[Circuit File]: ../circuit_io/ideal/32/h32.txt
+6.83067s

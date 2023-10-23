@@ -1,0 +1,13 @@
+[Circuit File]: cir.txt
+[Config File]: res.ini
+11.715s
+[Circuit File]: cir.txt
+[Config File]: res.ini
+-killed
+
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+1.55868s
+[Circuit File]: subcir.txt
+[Config File]: res.ini
+-killed

@@ -1,0 +1,36 @@
+[Circuit File]: origin_qft21.txt
+[Config File]: res.ini
+0.237438s
+[Circuit File]: origin_qft24.txt
+[Config File]: res.ini
+1.99952s
+[Circuit File]: origin_qft27.txt
+[Config File]: res.ini
+18.68s
+[Circuit File]: origin_qft30.txt
+[Config File]: res.ini
+174.953s
+[Circuit File]: origin_qft21.txt
+[Config File]: res.ini
+0.250659s
+[Circuit File]: origin_qft24.txt
+[Config File]: res.ini
+2.00379s
+[Circuit File]: origin_qft27.txt
+[Config File]: res.ini
+18.6733s
+[Circuit File]: origin_qft30.txt
+[Config File]: res.ini
+167.416s
+[Circuit File]: origin_qft21.txt
+[Config File]: res.ini
+0.251284s
+[Circuit File]: origin_qft24.txt
+[Config File]: res.ini
+2.08332s
+[Circuit File]: origin_qft27.txt
+[Config File]: res.ini
+18.7494s
+[Circuit File]: origin_qft30.txt
+[Config File]: res.ini
+177.104s
