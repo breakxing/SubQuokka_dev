@@ -22,6 +22,7 @@
 #include "IO_Runner.hpp"
 #include "DIO_Runner.hpp"
 #include "MEM_Runner.hpp"
+#include "MPI_Runner.hpp"
 
 using namespace std;
 
@@ -30,12 +31,12 @@ struct ENV env;
 
 // check qubit is in mpi seg;
 bool isMpi(int target) {
-    return (target < seg.N) && (target >= (seg.N - seg.mpi));
+    return target >= seg.N;
 }
 
 // check qubit is in file seg;
 bool isFile(int target) {
-    return (target < (seg.N - seg.mpi)) && (target >= (seg.N - seg.mpi - seg.file));
+    return (target >= (seg.middle + seg.chunk)) && (target < seg.N);
 }
 
 // check qubit is in middle seg;
@@ -89,11 +90,13 @@ void setSEG(INIReader &reader) {
     string section("system");
     seg.N = reader.GetInteger(section, "total_qbit", 0);
     seg.mpi = reader.GetInteger(section, "mpi_qbit", 0);
+    seg.N = seg.N - seg.mpi;
     seg.file = reader.GetInteger(section, "file_qbit", 0);
     seg.chunk = reader.GetInteger(section, "chunk_qbit", 0);
     seg.middle = seg.N - seg.file - seg.chunk;
 
     // assert for invalid case
+    
     assert(seg.N >= (seg.file + seg.chunk));
 }
 
@@ -182,17 +185,20 @@ void Simulator::setupIni(string ini) {
     omp_set_num_threads(env.num_thread);
 
     if (env.runner_type == "IO") {
+        std::cout<<"IO Mode\n";
         Runner = new IO_Runner();
     } else if (env.runner_type == "DirectIO") {
+        std::cout<<"DIO Mode\n";
         Runner = new DIO_Runner();
     } else if (env.runner_type == "MEM") {
+        std::cout<<"MEM Mode\n";
         Runner = new MEM_Runner();
     } else if (env.runner_type == "RDMA") {
         cerr << "[Config File]: RDMA runner not found." << endl;
         exit(1);
     } else if (env.runner_type == "MPI") {
-        cerr << "[Config File]: MPI runner not found." << endl;
-        exit(1);
+        std::cout<<"MPI Mode\n";
+        Runner = new MPI_Runner();
     } else if (env.runner_type == "GPU") {
         cerr << "[Config File]: GPU runner not found." << endl;
         exit(1);
@@ -222,8 +228,13 @@ void Simulator::setupCir(string cir){
         cerr << "[Config File]: RDMA runner not found." << endl;
         exit(1);
     } else if (env.runner_type == "MPI") {
-        cerr << "[Config File]: MPI runner not found." << endl;
-        exit(1);
+        if(env.is_subcircuit)
+        {
+            cerr << "Not implement yet" << endl;
+            exit(1);
+        }
+        else
+            setupCircuit_MPI(cir);
     } else if (env.runner_type == "GPU") {
         cerr << "[Config File]: GPU runner not found." << endl;
         exit(1);
@@ -303,6 +314,62 @@ Gate *setUnitary(stringstream &ss, int n_qubits) {
     return new T(targ, coeff);
 }
 
+Gate *Simulator::setGate_MPI(string &line) {
+    // static int count = 0;
+    // cerr << "[setGate] " << count++ << "th gate." << endl;
+    stringstream ss;
+    ss << line;
+    string gate_ops;
+    ss >> gate_ops;
+    if (gate_ops == "U1") {
+        return setUnitary<U1_Gate>(ss, ONE_QUBIT);
+    } else if (gate_ops == "U2") {
+        return setUnitary<U2_Gate>(ss, TWO_QUBIT);
+    } else if (gate_ops == "U3") {
+        return setUnitary<U3_Gate>(ss, THREE_QUBIT);
+    } else if (gate_ops == "H"){
+        return setGate_1<H_Gate>(ss);
+    // } else if (gate_ops == "S"){
+    //     return setGate1<S_Gate>(ss);
+    // } else if (gate_ops == "T"){
+    //     return setGate1<T_Gate>(ss);
+    } else if (gate_ops == "X"){
+        return setGate_1<X_Gate>(ss);
+    } else if (gate_ops == "Y"){
+        return setGate_1<Y_Gate>(ss);
+    } else if (gate_ops == "Z"){
+        return setGate_1<Z_Gate>(ss);
+    } else if (gate_ops == "P"){
+        return setGate_Phase<Phase_Gate>(ss, ONE_QUBIT);
+    } else if (gate_ops == "RX"){
+        return setGate_Phase<RX_Gate>(ss, ONE_QUBIT);
+    } else if (gate_ops == "RY"){
+        return setGate_Phase<RY_Gate>(ss, ONE_QUBIT);
+    } else if (gate_ops == "RZ"){
+        return setGate_Phase<RZ_Gate>(ss, ONE_QUBIT);
+    } else if (gate_ops == "SWAP") {
+        return setGate_2<SWAP_Gate>(ss);
+    } else if (gate_ops == "CP"){
+        return setGate_Phase<CPhase_Gate>(ss, TWO_QUBIT);
+    } else if (gate_ops == "RZZ"){
+        return setGate_Phase<RZZ_Gate>(ss, TWO_QUBIT);
+    } /*else if (gate_ops == "VSWAP_1_1") {
+        return setGate_vswap<VSWAP_Gate_1_1>(ss, 1);
+    } else if (gate_ops == "VSWAP_2_2") {
+        return setGate_vswap<VSWAP_Gate_2_2>(ss, 2);
+    } else if (gate_ops == "VSWAP_3_3") {
+        return setGate_vswap<VSWAP_Gate_3_3>(ss, 3);
+    } else if (gate_ops == "VSWAP_4_4") {
+        return setGate_vswap<VSWAP_Gate_4_4>(ss, 4);
+    } else if (gate_ops == "VSWAP_6_6") {
+        return setGate_vswap<VSWAP_Gate_6_6>(ss, 6);
+    }*/ else {
+        cerr << "[setGate]: Not implemented yet." << endl;
+        exit(1);
+    }
+}
+
+
 // create a Gate by a string description
 Gate *Simulator::setGate_IO(string &line) {
     // static int count = 0;
@@ -367,7 +434,17 @@ void printGateName(Gate *gate) {
     }
     cout << endl << flush;
 }
+void Simulator::setupCircuit_MPI(string cir) {
+    ifstream cirfile;
+    cirfile.open(cir);
 
+    string line;
+    while (getline(cirfile, line)) {
+        circuit.push_back(setGate_MPI(line));
+        // printGateName(circuit.back());
+    }
+    cirfile.close();
+}
 // create a circuit by circuit file
 void Simulator::setupCircuit_IO(string cir) {
     // read from circuit file
@@ -585,10 +662,12 @@ void Simulator::setupStateFile() {
             fd_off += env.chunk_size;
         }
     }
-
-    buffer[0] = complex<double>(1.0, 0.0);
-    if (pwrite(env.fd_arr[0], static_cast<void *>(buffer.data()), sizeof(complex<double>), 0))
-        ;
+    if(env.rank == 0)
+    {
+        buffer[0] = complex<double>(1.0, 0.0);
+        if (pwrite(env.fd_arr[0], static_cast<void *>(buffer.data()), sizeof(complex<double>), 0))
+            ;
+    }
 }
 
 bool checkValue(vector<complex<double>> &sv){
@@ -653,6 +732,13 @@ Simulator::Simulator(string ini, string cir) {
 }
 
 Simulator::~Simulator() {
+    if(env.runner_type == "MPI")
+    {
+        if(MPI_Finalize()!=MPI_SUCCESS)
+        {
+            exit(-1);
+        }
+    }
     delete Runner;
 }
 

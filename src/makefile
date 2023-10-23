@@ -1,11 +1,11 @@
 # Compiler
-CXX = g++ -std=c++17
+CXX = mpiCC
 
 # Compiler flags
 CXXFLAGS = -g3 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -lm -fopenmp
 
 # Source files
-SRCS = main.cpp circuit.cpp common.cpp ini.cpp INIReader.cpp simulator.cpp IO_Runner.cpp DIO_Runner.cpp MEM_Runner.cpp
+SRCS = main.cpp circuit.cpp common.cpp ini.cpp INIReader.cpp simulator.cpp IO_Runner.cpp DIO_Runner.cpp MEM_Runner.cpp MPI_Runner.cpp
 # Object files
 OBJS = $(SRCS:.cpp=.o)
 

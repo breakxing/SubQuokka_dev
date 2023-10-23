@@ -18,7 +18,7 @@ struct ENV{
     int half_num_thread;
     int quarter_num_thread;
     int eighth_num_thread;
-    
+    int rank;
     long long file_state;
     long long thread_state;
     long long chunk_state;
@@ -26,7 +26,7 @@ struct ENV{
     long long file_size;
     long long thread_size;
     long long chunk_size;
-
+    
     std::vector<long long> qubit_offset;
     std::vector<long long> qubit_size;
     std::vector<int> fd_arr;
@@ -53,6 +53,9 @@ class Simulator
     void setupIni(std::string);
     void setupCir(std::string);
 
+    Gate* setGate_MPI(std::string &);
+    void setupCircuit_MPI(std::string);
+
     Gate* setGate_IO(std::string &);
     void setupCircuit_IO(std::string);
     void setupSubCircuits_IO(std::string);
@@ -70,6 +73,7 @@ public:
     class circuitRunner;
     friend class circuitRunner;
     friend class IO_Runner;
+    friend class MPI_Runner;
     circuitRunner *Runner;
     
     Simulator(std::string, std::string);

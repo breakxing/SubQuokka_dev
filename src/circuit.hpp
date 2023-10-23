@@ -20,6 +20,7 @@ class Gate
 {
 public:
     GATE_TYPE type;
+    int mpi_count = 0;
     int file_count = 0;
     int middle_count = 0;
     int chunk_count = 0;

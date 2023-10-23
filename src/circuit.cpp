@@ -237,14 +237,16 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
 
 Gate::Gate(vector<int> targ): targs(targ){
     for(auto &x: targ){
-        if(isFile(x))
+        if(isMpi(x))
+            mpi_count++;
+        else if(isFile(x))
             file_count++;
         else if(isMiddle(x))
             middle_count++;
         else if(isChunk(x))
             chunk_count++;
     }
-    nonchunk_count = file_count + middle_count;
+    nonchunk_count = mpi_count + file_count + middle_count;
 
     type = ERROR;
 }
