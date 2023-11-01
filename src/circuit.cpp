@@ -10,7 +10,9 @@ using namespace std;
 using namespace placeholders;
 
 #define bind_gate_1(gate_name) \
-    if(isChunk(targ[0]))\
+    if(isMpi(targ[0]))\
+        run = bind(&gate_name::run_nonchunk, this, _1);\
+    else if(isChunk(targ[0]))\
         run = bind(&gate_name::run_chunk, this, _1);\
     else\
         run = bind(&gate_name::run_nonchunk, this, _1);
@@ -234,7 +236,6 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer[off2] *= exp_p_iPhi_2;\
     buffer[off3] *= exp_n_iPhi_2;
 
-
 Gate::Gate(vector<int> targ): targs(targ){
     for(auto &x: targ){
         if(isMpi(x))
@@ -255,8 +256,9 @@ Gate::Gate(vector<int> targ): targs(targ){
 
 ONE_QUBIT_GATE::ONE_QUBIT_GATE(vector<int> targ): Gate(targ){
     type = ONE_QUBIT;
-
-    if(isChunk(targ[0]))
+    if(isMpi(targ[0]))
+        half_off = env.chunk_state;
+    else if(isChunk(targ[0]))
         half_off = env.qubit_offset[targ[0]];
     else
         half_off = env.chunk_state;
@@ -3276,7 +3278,7 @@ VSWAP_Gate_3_3_MEM::VSWAP_Gate_3_3_MEM(vector<int> targ): Gate(targ) {
 void VSWAP_Gate_3_3_MEM::run_nonchunk_chunk(vector<complex<double>> &buffer, long long idx){
     complex<double> temp;
     long long off[56];
-    #pragma unroll(56)
+    #pragma GCC unroll(56)
     for (int p = 0; p < 56; p++) {
         off[p] = init_off[p] + idx;
     }

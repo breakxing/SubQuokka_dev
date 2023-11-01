@@ -371,34 +371,34 @@ def set_circuit(path, N):
     for op in ops:
         if op[0]=="H":
             circ.h(int(op[1]))
-        if op[0]=="S":
+        elif op[0]=="S":
             circ.s(int(op[1]))
-        if op[0]=="T":
+        elif op[0]=="T":
             circ.t(int(op[1]))
-        if op[0]=="X":
+        elif op[0]=="X":
             circ.x(int(op[1]))
-        if op[0]=="Y":
+        elif op[0]=="Y":
             circ.y(int(op[1]))
-        if op[0]=="Z":
+        elif op[0]=="Z":
             circ.z(int(op[1]))
-        if op[0]=="P":
+        elif op[0]=="P":
             circ.p(float(op[2]), int(op[1]))
-        if op[0]=="U1": # UnitaryGate
+        elif op[0]=="U1": # UnitaryGate
             for i in range(2, 10):
                 op[i] = float(op[i])
             gate = UnitaryGate([[op[2]+op[3]*1j, op[4]+op[5]*1j], 
                                 [op[6]+op[7]*1j, op[8]+op[9]*1j]])
             circ.append(gate,[int(op[1])])
 
-        if op[0]=="CX":
+        elif op[0]=="CX":
             circ.cx(int(op[1]), int(op[2]))
-        if op[0]=="CY":
+        elif op[0]=="CY":
             circ.cy(int(op[1]), int(op[2]))
-        if op[0]=="CZ":
+        elif op[0]=="CZ":
             circ.cy(int(op[1]), int(op[2]))
-        if op[0]=="CP":
+        elif op[0]=="CP":
             circ.cp(float(op[3]), int(op[1]), int(op[2]))
-        if op[0]=="CU1":
+        elif op[0]=="CU1":
             # control-unitary
             for i in range(3, 11):
                 op[i] = float(op[i])
@@ -407,13 +407,13 @@ def set_circuit(path, N):
                                 [0, 0, op[3]+op[4]*1j, op[5]+op[ 6]*1j],
                                 [0, 0, op[7]+op[8]*1j, op[9]+op[10]*1j]])
             circ.append(gate,[int(op[1]), int(op[2])])
-        if op[0]=="SWAP":
+        elif op[0]=="SWAP":
             circ.swap(int(op[1]), int(op[2]))
-        if op[0]=="TOFFOLI":
+        elif op[0]=="TOFFOLI":
             # control1 control2 targert
             circ.toffoli(int(op[1]), int(op[2]), int(op[3]))
 
-        if op[0]=="U2": # 2 qubit UnitaryGate
+        elif op[0]=="U2": # 2 qubit UnitaryGate
             for i in range(3, 35):
                 op[i] = float(op[i])
             gate = UnitaryGate([[op[ 3]+op[ 4]*1j,op[ 5]+op[ 6]*1j,op[ 7]+op[ 8]*1j,op[ 9]+op[10]*1j],
@@ -425,7 +425,7 @@ def set_circuit(path, N):
             # circ.append(gate,[reorder(op[4], N), reorder(op[5], N)])
             circ.append(gate,[int(op[2]), int(op[1])])
 
-        if op[0]=="U3":  # 3 qubit UnitaryGate
+        elif op[0]=="U3":  # 3 qubit UnitaryGate
             for i in range(4, 132):
                 op[i] = float(op[i])
             gate = UnitaryGate([[op[  4]+op[  5]*1j,op[  6]+op[  7]*1j,op[  8]+op[  9]*1j,op[ 10]+op[ 11]*1j,op[ 12]+op[ 13]*1j,op[ 14]+op[ 15]*1j,op[ 16]+op[ 17]*1j,op[ 18]+op[ 19]*1j],
@@ -437,6 +437,9 @@ def set_circuit(path, N):
                                 [op[100]+op[101]*1j,op[102]+op[103]*1j,op[104]+op[105]*1j,op[106]+op[107]*1j,op[108]+op[109]*1j,op[110]+op[111]*1j,op[112]+op[113]*1j,op[114]+op[115]*1j],
                                 [op[116]+op[117]*1j,op[118]+op[119]*1j,op[120]+op[121]*1j,op[122]+op[123]*1j,op[124]+op[125]*1j,op[126]+op[127]*1j,op[128]+op[129]*1j,op[130]+op[131]*1j]])
             circ.append(gate,[int(op[3]), int(op[2]), int(op[1])])
+        else:
+            print(f"{op[0]} Not Set in Comparison")
+            exit(-1)
     # print(circ)
     return circ
 

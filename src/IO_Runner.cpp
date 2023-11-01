@@ -125,7 +125,6 @@ thread_IO_task::thread_IO_task(int tid) {
         fd_offset_table.push_back(env.qubit_size[i + seg.chunk]);
     }
 
-    long long file_size = env.file_size;
     for (int i = 0; i < seg.file; i++) {
         int corr = findCorrespond(tid, i);
 
@@ -133,6 +132,11 @@ thread_IO_task::thread_IO_task(int tid) {
             fd_table.push_back(corr - tid);
             fd_offset_table.push_back(0);
         }
+    }
+    for(int i = 0;i < seg.mpi;i++)
+    {
+        fd_table.push_back(tid);
+        fd_offset_table.push_back(0);
     }
 }
 
@@ -143,7 +147,8 @@ IO_Runner::IO_Runner() {
             thread_tasks[i].buffer.resize(8 * env.chunk_state); // 64 for VSWAP_6_6, 8 for normal use.
             // posix_memalign(thread_tasks[i].buffer, 4096, 8 * env.chunk_state * sizeof(complex<double>)); // 64 for VSWAP_6_6, 8 for normal use.
         }
-        thread_tasks[i].buffer.resize(8 * env.chunk_state); // 64 for VSWAP_6_6, 8 for normal use.
+        else
+            thread_tasks[i].buffer.resize(8 * env.chunk_state); // 64 for VSWAP_6_6, 8 for normal use.
     }
 }
 
@@ -339,7 +344,6 @@ void IO_Runner::run(vector<vector<Gate *>> &subcircuits) {
         int tid = omp_get_thread_num();
         auto task = thread_tasks[tid];
 
-        static int count = 0;
         for (auto &subcircuit : subcircuits) {
             Gate *g = subcircuit[0];
             if (g->type == VSWAP) {
@@ -347,7 +351,6 @@ void IO_Runner::run(vector<vector<Gate *>> &subcircuits) {
                 int file_count = subcircuit[0]->file_count;
                 int middle_count = subcircuit[0]->middle_count;
                 int chunk_count = subcircuit[0]->chunk_count;
-                int nonchunk_count = subcircuit[0]->nonchunk_count;
 
                 if (file_count > 0 && skipThread(tid, targ)) {
                     #pragma omp barrier

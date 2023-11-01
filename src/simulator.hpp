@@ -33,6 +33,7 @@ struct ENV{
     std::string runner_type;
     int is_subcircuit;
     int is_directIO;
+    int is_MPI;
     std::string dumpfile;
     // int SetOfSaveState;
 };
@@ -77,7 +78,7 @@ public:
     circuitRunner *Runner;
     
     Simulator(std::string, std::string);
-    ~Simulator();
+    virtual ~Simulator();
     void run();
     // run(Circuit);
 };
@@ -93,6 +94,6 @@ public:
         std::cout << "[circuitRunner]: Not implemented" << std::endl;
         exit(1);
     }
+    virtual ~circuitRunner(){};
 };
-
 #endif

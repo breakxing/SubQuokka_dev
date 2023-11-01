@@ -33,6 +33,7 @@ public:
     function<void (complex<double> *buffer)> run_dio;  // DIO version
     function<void (vector<complex<double>>& buffer, long long idx)> _run; // MEM version
     Gate(vector<int>);
+    virtual ~Gate(){};
 };
 
 /*-----ONE_QUBIT_GATE-----*/

@@ -118,7 +118,6 @@ thread_DIO_task::thread_DIO_task(int tid) {
         fd_offset_table.push_back(env.qubit_size[i + seg.chunk]);
     }
 
-    long long file_size = env.file_size;
     for (int i = 0; i < seg.file; i++) {
         int corr = findCorrespond(tid, i);
 
@@ -335,7 +334,6 @@ void DIO_Runner::run(vector<vector<Gate *>> &subcircuits) {
         int tid = omp_get_thread_num();
         auto task = thread_tasks[tid];
 
-        static int count = 0;
         for (auto &subcircuit : subcircuits) {
             Gate *g = subcircuit[0];
             if (g->type == VSWAP) {
@@ -343,7 +341,6 @@ void DIO_Runner::run(vector<vector<Gate *>> &subcircuits) {
                 int file_count = subcircuit[0]->file_count;
                 int middle_count = subcircuit[0]->middle_count;
                 int chunk_count = subcircuit[0]->chunk_count;
-                int nonchunk_count = subcircuit[0]->nonchunk_count;
 
                 if (file_count > 0 && skipThread(tid, targ)) {
                     #pragma omp barrier

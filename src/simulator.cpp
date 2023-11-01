@@ -133,7 +133,7 @@ void setENV(INIReader &reader) {
     env.dumpfile = reader.Get(section, "dump_file", "");
     env.runner_type = reader.Get(section, "runner_type", "IO");
     env.is_subcircuit = reader.GetInteger(section, "is_subcircuit", 1);
-
+    env.is_MPI = (seg.mpi > 0);
     env.num_file = (1ULL << seg.file);
     env.num_thread = env.num_file;
     env.half_num_thread = env.num_thread / 2;
@@ -158,15 +158,15 @@ void setENV(INIReader &reader) {
     }
 
     // printf("is density: %d\n", IsDensity);
-    if(env.runner_type != "MEM") {
-        string state_paths;
-        state_paths = reader.GetString(section, "state_paths", "");
-        if (state_paths.empty()) {
-            cerr << "[Config File]: state_paths not found." << endl;
-            exit(1);
-        }
-        setupFiles(state_paths);
-    }
+    // if(env.runner_type != "MEM") {
+    //     string state_paths;
+    //     state_paths = reader.GetString(section, "state_paths", "");
+    //     if (state_paths.empty()) {
+    //         cerr << "[Config File]: state_paths not found." << endl;
+    //         exit(1);
+    //     }
+    //     setupFiles(state_paths);
+    // }
 }
 
 // initialize the seg and env from the *.ini file
@@ -176,7 +176,7 @@ void Simulator::setupIni(string ini) {
         cerr << "Error parsing config.ini!" << endl;
         exit(1);
     }
-
+    
     setSEG(reader);
     setENV(reader);
     //double vm, rss;
@@ -199,6 +199,23 @@ void Simulator::setupIni(string ini) {
     } else if (env.runner_type == "MPI") {
         std::cout<<"MPI Mode\n";
         Runner = new MPI_Runner();
+        string section("system");
+        string state_paths;
+        state_paths = reader.GetString(section, "state_paths", "");
+        std::istringstream ss(state_paths);
+        string new_paths = "";
+        string token;
+        while(getline(ss,token,','))
+        {
+            token.insert(7,to_string(env.rank));
+            new_paths += token + ",";
+        }
+        if (state_paths.empty()) {
+            cerr << "[Config File]: state_paths not found." << endl;
+            exit(1);
+        }
+        new_paths.pop_back();
+        setupFiles(new_paths);
     } else if (env.runner_type == "GPU") {
         cerr << "[Config File]: GPU runner not found." << endl;
         exit(1);
@@ -655,8 +672,8 @@ void Simulator::setupStateFile() {
 #pragma omp parallel
     {
         int t = omp_get_thread_num();
-        unsigned long long fd_off = 0;
-        for (unsigned long long sz = 0; sz < env.file_state; sz += env.chunk_state) {
+        long long fd_off = 0;
+        for (long long sz = 0; sz < env.file_state; sz += env.chunk_state) {
             if (pwrite(env.fd_arr[t], static_cast<void *>(buffer.data()), env.chunk_size, fd_off))
                 ;
             fd_off += env.chunk_size;
@@ -732,12 +749,12 @@ Simulator::Simulator(string ini, string cir) {
 }
 
 Simulator::~Simulator() {
-    if(env.runner_type == "MPI")
+    for(auto &g:circuit)
+        delete g;
+    for(auto &gg:subcircuits)
     {
-        if(MPI_Finalize()!=MPI_SUCCESS)
-        {
-            exit(-1);
-        }
+        for(auto &g:gg)
+            delete g;
     }
     delete Runner;
 }
