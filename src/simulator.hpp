@@ -34,6 +34,7 @@ struct ENV{
     int is_subcircuit;
     int is_directIO;
     int is_MPI;
+    int MPI_testing;
     std::string dumpfile;
     // int SetOfSaveState;
 };

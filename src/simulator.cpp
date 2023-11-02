@@ -101,11 +101,17 @@ void setSEG(INIReader &reader) {
 }
 
 inline void setupFiles(string state_paths) {
+
+
+
+
     stringstream ss(state_paths);
     vector<string> tokens;
     string token;
     while (getline(ss, token, ',')) {
         // cout << token << endl; // print path of state files
+        if(env.MPI_testing)
+            token.insert(7,to_string(env.rank));
         tokens.push_back(token);
     }
 
@@ -122,7 +128,16 @@ inline void setupFiles(string state_paths) {
         }
     }
 }
-
+void read_state_file_paths(INIReader &reader,string section)
+{
+    string state_paths;
+    state_paths = reader.GetString(section, "state_paths", "");
+    if (state_paths.empty()) {
+        cerr << "[Config File]: state_paths not found." << endl;
+        exit(1);
+    }
+    setupFiles(state_paths);
+}
 void setENV(INIReader &reader) {
     string section("system");
 
@@ -134,6 +149,7 @@ void setENV(INIReader &reader) {
     env.runner_type = reader.Get(section, "runner_type", "IO");
     env.is_subcircuit = reader.GetInteger(section, "is_subcircuit", 1);
     env.is_MPI = (seg.mpi > 0);
+    env.MPI_testing = reader.GetInteger(section, "MPI_testing", 0);
     env.num_file = (1ULL << seg.file);
     env.num_thread = env.num_file;
     env.half_num_thread = env.num_thread / 2;
@@ -158,17 +174,11 @@ void setENV(INIReader &reader) {
     }
 
     // printf("is density: %d\n", IsDensity);
-    // if(env.runner_type != "MEM") {
-    //     string state_paths;
-    //     state_paths = reader.GetString(section, "state_paths", "");
-    //     if (state_paths.empty()) {
-    //         cerr << "[Config File]: state_paths not found." << endl;
-    //         exit(1);
-    //     }
-    //     setupFiles(state_paths);
-    // }
+    if(env.runner_type != "MEM" && env.MPI_testing == 0)
+    {
+        read_state_file_paths(reader,section);
+    }
 }
-
 // initialize the seg and env from the *.ini file
 void Simulator::setupIni(string ini) {
     INIReader reader(ini);
@@ -199,23 +209,8 @@ void Simulator::setupIni(string ini) {
     } else if (env.runner_type == "MPI") {
         std::cout<<"MPI Mode\n";
         Runner = new MPI_Runner();
-        string section("system");
-        string state_paths;
-        state_paths = reader.GetString(section, "state_paths", "");
-        std::istringstream ss(state_paths);
-        string new_paths = "";
-        string token;
-        while(getline(ss,token,','))
-        {
-            token.insert(7,to_string(env.rank));
-            new_paths += token + ",";
-        }
-        if (state_paths.empty()) {
-            cerr << "[Config File]: state_paths not found." << endl;
-            exit(1);
-        }
-        new_paths.pop_back();
-        setupFiles(new_paths);
+        if(env.MPI_testing)
+            read_state_file_paths(reader,"system");
     } else if (env.runner_type == "GPU") {
         cerr << "[Config File]: GPU runner not found." << endl;
         exit(1);
