@@ -13,14 +13,10 @@ state_paths = ",".join(state_paths)
 
 cir_path = "cir.txt"
 cir = get_circuit()
-N = 23
-# for i in range(N):
-#     H(cir,i)
-H(cir,8)
-targ1 = 8
-targ2 = N - 1
-CPhase(cir,targ1,targ2,math.pi / 4)
-SWAP(cir,targ1,targ2)
+N = 20
+for i in range(N):
+    H(cir,i)
+CPhase(cir,N - 3,N - 2,math.pi / 2)
 # for i in range(0,12):
 #     CPhase(cir,i,15,math.pi / 2)
 # CPhase(cir,12,17,math.pi / 2)

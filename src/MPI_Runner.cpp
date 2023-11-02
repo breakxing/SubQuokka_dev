@@ -346,7 +346,14 @@ void MPI_Runner::run(vector<Gate *> &circuit) {
                 }
             }
             else if(mpi_count <= 2)
-                MPI_gate_scheduler(task,g);
+            {
+                if(g->name == "SWAP_Gate")
+                {
+                    MPI_Swap(task,g);
+                }
+                else
+                    MPI_gate_scheduler(task,g);
+            }
             else
                 exit(-1);
 #pragma omp barrier
@@ -419,10 +426,100 @@ void MPI_Runner::run(vector<vector<Gate *>> &subcircuits) {
         }
     }
 }
+void MPI_Runner::MPI_Swap(thread_MPI_task &task,Gate * &g)
+{
+    long long mpi_targ_mask_0 = 1 << (g->targs[1] - seg.N);
+    long long mpi_targ_mask_1 = 1 << (g->targs[0] - seg.N);
+    task.partner_using = {int(((long long)env.rank) ^ mpi_targ_mask_0)};
+    task.fd_using = {env.fd_arr[task.tid],env.fd_arr[task.tid]};
+    task.fd_offset_using = {0};
+    long long loop_bound = env.thread_size;
+    long long loop_stride = (env.thread_state == env.chunk_state)? env.chunk_size : (env.chunk_size << 1);
+    bool firstround = true;
+    // long long threshold;
+    if(isMpi(g->targs[0]))
+    {
+        cout<<"AAA\n";
+        if(((env.rank >> (g->targs[1] - seg.N)) & 1) == ((env.rank >> (g->targs[0] - seg.N)) & 1)) return;
+        task.partner_using = {int(((long long)env.rank) ^ mpi_targ_mask_0 ^ mpi_targ_mask_1)};
+        loop_stride = env.chunk_size;
+        for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+        {
+            _thread_swap(task,g,firstround);
+            update_offset(task,loop_stride);
+            firstround = false;
+        }
+    }
+    else if(isFile(g->targs[0]))
+    {
+        cout<<"BBB\n";
+        long long file_mask = 1 << (g->targs[0] - seg.middle - seg.chunk);
+        if(env.thread_state == env.chunk_state && (((env.rank >> (g->targs[1] - seg.N)) & 1) == ((task.tid >> (g->targs[0] - seg.middle - seg.chunk)) & 1))) return;
+        task.fd_using = {env.fd_arr[task.tid & (~file_mask)],env.fd_arr[task.tid | file_mask]};
+        for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+        {
+            _thread_swap(task,g,firstround);
+            update_offset(task,loop_stride);
+            firstround = false;
+        }
+    }
+    else if(isMiddle(g->targs[0]))
+    {
+        loop_stride = env.qubit_size[g->targs[0] + 1];
+        if(!env.rank)
+            cout<<task.tid<<endl;
+        for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+        {
+            task.fd_offset_using = env.rank < task.partner_using[0]? vector<long long>{cur_offset + env.qubit_size[g->targs[0]]} : vector<long long>{cur_offset};
+            for(long long j = 0;j < env.qubit_size[g->targs[0]]; j += env.chunk_size)
+            {
+                _thread_swap(task,g,firstround);
+                update_offset(task,env.chunk_size);
+                firstround = false;
+            }
+        }
+    }
+    else
+    {
+        for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+        {
+            _thread_swap(task,g,firstround);
+            update_offset(task,loop_stride);
+            firstround = false;
+        }
+    }
+}
+void MPI_Runner::_thread_swap(thread_MPI_task &task,Gate * &g,bool firstround)
+{
+    int partner_rank = task.partner_using[0];
+    long long file_mask = 1 << (g->targs[0] - seg.middle - seg.chunk);
+    int member_th = env.rank > partner_rank? 1 : 0;
+    int thread_member_th;//For all thread drive such as D F,otherwise it is 0
+    int recv_tag;
+    if(isFile(g->targs[0]))
+    {
+        thread_member_th = (env.thread_state == env.chunk_state)? 0 : (task.tid & (file_mask)? 1 : 0);
+        recv_tag = (env.thread_state != env.chunk_state)? task.tid : task.tid ^ file_mask;
+    }
+    else
+    {
+        thread_member_th = 0;
+        recv_tag = task.tid;
+    }
+        MPI_Irecv(&task.buffer[(!member_th) * env.chunk_state], env.chunk_state, MPI_DOUBLE_COMPLEX, partner_rank,recv_tag, MPI_COMM_WORLD,&task.request[!member_th]);
+        if(!firstround)
+            MPI_Wait(&task.request[member_th],MPI_STATUS_IGNORE);
+        if(pread(task.fd_using[!member_th],&task.buffer[member_th * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + thread_member_th * env.chunk_size));
+        MPI_Isend(&task.buffer[member_th * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request[member_th]);
+        MPI_Wait(&task.request[!member_th],MPI_STATUS_IGNORE);
+        if(isChunk(g->targs[0]))
+            g->run(task.buffer);
+        if(pwrite(task.fd_using[!member_th],&task.buffer[(!member_th) * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + thread_member_th * env.chunk_size));
+}
 void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
 {
-    int mpi_targ_mask_0 = 1 << (g->targs[1] - seg.N);
-    int mpi_targ_mask_2 = 1 << (g->targs[0] - seg.N);
+    long long mpi_targ_mask_0 = 1 << (g->targs[1] - seg.N);
+    long long mpi_targ_mask_2 = 1 << (g->targs[0] - seg.N);
     long long loop_bound = env.thread_size;
     long long loop_stride;
     long long threshold;
@@ -432,12 +529,12 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
     int rank3;
     if(g->targs.size() == 1)
     {
-        task.partner_using = {env.rank ^ mpi_targ_mask_2};
+        task.partner_using = {int(((long long)env.rank) ^ mpi_targ_mask_2)};
         task.fd_using = {env.fd_arr[task.tid]};
         task.fd_offset_using = {0};
         loop_stride = env.chunk_size << 1;
         if(env.thread_state == env.chunk_state && env.rank > task.partner_using[0])
-            _thread_pure_send_recv_MPI(task,1);
+            _thread_no_exec_MPI(task,1);
         else
         {
             for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
@@ -462,7 +559,7 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
             loop_stride = (1 << int(log2(threshold))) * env.chunk_size;
             if(env.rank > task.partner_using[threshold - 1])
             {
-                _thread_pure_send_recv_MPI(task,1 << int(log2(threshold)));
+                _thread_no_exec_MPI(task,1 << int(log2(threshold)));
             }
             else
             {
@@ -489,7 +586,7 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
                 return;
             if(threshold == 1 && env.rank > task.partner_using[0])
             {
-                _thread_pure_send_recv_MPI(task,2);
+                _thread_no_exec_MPI(task,2);
                 return;
             }
             for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
@@ -512,7 +609,7 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
                 if(env.chunk_state == env.qubit_offset[g->targs[0]])
                 {
                     if(env.rank > task.partner_using[0])
-                        _thread_pure_send_recv_MPI(task,2);
+                        _thread_no_exec_MPI(task,2);
                     else
                         _thread_read2_recv2(task,g,1,0);
                 }
@@ -546,7 +643,7 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
             task.fd_offset_using = {0};
             loop_stride = env.chunk_size << 1;
             if(env.thread_state == env.chunk_state && env.rank > task.partner_using[0])
-                _thread_pure_send_recv_MPI(task,1);
+                _thread_no_exec_MPI(task,1);
             else
             {
                 for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
@@ -664,7 +761,7 @@ void MPI_Runner::_thread_read1_recv3(thread_MPI_task &task,Gate * &g,int num_wor
         next_buffer_idx = Get_Next_Undone_Buffer_index(task.request,used,num_worker - 1,8);
     }
 }
-void MPI_Runner::_thread_pure_send_recv_MPI(thread_MPI_task &task,int round)
+void MPI_Runner::_thread_no_exec_MPI(thread_MPI_task &task,int round)
 {
     vector<bool>used(round,false);
     for(int i = 0;i < round;i++)

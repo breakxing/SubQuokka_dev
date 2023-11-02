@@ -3,3 +3,4 @@ Quokka
 cir.txt
 *.ini
 .vscode*
+./correctness/cir.txt

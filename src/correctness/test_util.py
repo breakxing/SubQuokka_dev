@@ -450,6 +450,9 @@ def check(fd_state, qiskit_state, N, NUMFILE):
     for i in range(NUMFILE):
         if (not np.alltrue(np.abs(qiskit_state[i*FILESIZE:(i+1)*FILESIZE]-fd_state[i]) < 1e-9)):
             flag = False
+            print("File",i)
+            print("Go",qiskit_state[i*FILESIZE:(i+1)*FILESIZE])
+            print("My",fd_state[i])
             break
     return flag
 

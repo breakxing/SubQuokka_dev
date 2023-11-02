@@ -24,11 +24,13 @@ class MPI_Runner: public Simulator::circuitRunner {
     std::vector<thread_MPI_task> thread_tasks;
     void setFD(thread_MPI_task &, Gate * &);
     void setFD_sub(thread_MPI_task &);
-    void _thread_read1_recv1(thread_MPI_task &,Gate * &);
+    void MPI_Swap(thread_MPI_task &,Gate * &);
+    void _thread_swap(thread_MPI_task &,Gate * &,bool);
     void MPI_gate_scheduler(thread_MPI_task &,Gate * &);
+    void _thread_read1_recv1(thread_MPI_task &,Gate * &);
     void _thread_read2_recv2(thread_MPI_task &,Gate * &,int,long long);
     void _thread_read1_recv3(thread_MPI_task &,Gate * &,int);
-    void _thread_pure_send_recv_MPI(thread_MPI_task &,int round);
+    void _thread_no_exec_MPI(thread_MPI_task &,int round);
     int Get_Next_Undone_Buffer_index(vector<MPI_Request> &,vector<bool>&,int ,int);
     void update_offset(thread_MPI_task &,long long);
 
