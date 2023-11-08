@@ -22,7 +22,6 @@ class verifier:
         #     self.loader = loader_MEM
         elif args.runner_type == "MPI":
             self.file_paths = self.args.state_paths.split(",")
-            one_rank_file = len(self.file_paths)
             new_file_paths = []
             for i,file_path in enumerate(self.file_paths):
                 sp = file_path.split('/')
@@ -502,6 +501,8 @@ def set_circuit(path, N):
             circ.append(gate,[int(op[3]), int(op[2]), int(op[1])])
         elif op[0]=="RZZ":
             circ.rzz(float(op[3]),int(op[1]),int(op[2]))
+        elif op[0]=="RX":
+            circ.rx(float(op[2]),int(op[1]))
         else:
             print(f"{op[0]} Not Set in Comparison")
             exit(-1)
