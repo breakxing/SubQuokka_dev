@@ -61,8 +61,11 @@ void findChunkbyMaxNodePrinciple(const int, Node* &, set<int> &, int &);
 void findChunkbyMaxNodeWithNextPrinciple(const int, Node* &, set<int> &, vector<Node> &, vector<Node*> &);
 int openSwapFile(const string &, ofstream &);
 void genCirFile(const string &, const string &, vector<string> &, vector<string> &);
-
-
+bool in_mpi_qubits(vector<int>&vec,int x);
+bool in_mpi_qubits(vector<int>&vec,int x)
+{
+    return find(vec.begin(),vec.end(),x) != vec.end();
+}
 void genCirFile(const string &filename, const string &cirname, vector<string> &gateVec, map<string, string> &chunkVec) {
     map <string, string> gateMap;
     for(auto &gv: gateVec) { // create a gate table
@@ -72,13 +75,12 @@ void genCirFile(const string &filename, const string &cirname, vector<string> &g
             gateID = gv.substr(found+1);
         gateMap[gateID] = gv.substr(0, found);
     }
-    
     ifstream swapping;
     swapping.open(filename);
     ofstream ofs;
     if (openSwapFile(cirname, ofs) == 1)
         exit(-1);
-
+    vector<int>mpi_qubits = {19,20};
     string line;
     int iter = 0;
     const char delimiter = ' ';
@@ -121,9 +123,10 @@ void genCirFile(const string &filename, const string &cirname, vector<string> &g
                     int small, large;
                     small = min(stoi(chunkVec[targ1]), stoi(chunkVec[targ2]));
                     large = max(stoi(chunkVec[targ1]), stoi(chunkVec[targ2]));
-                    chunkVec[targ1] = to_string(small);
-                    chunkVec[targ2] = to_string(large);
-                    ofs << chunkVec[targ1] << " " << chunkVec[targ2];
+                    // chunkVec[targ1] = to_string(small);
+                    // chunkVec[targ2] = to_string(large);
+                    // ofs << chunkVec[targ1] << " " << chunkVec[targ2];
+                    ofs << small << " " << large;
                 }
                 while(gateInfo >> remain)
                     ofs << " " << remain;
@@ -174,6 +177,47 @@ void genCirFile(const string &filename, const string &cirname, vector<string> &g
             cout << endl << "---\n";
             */
             for(auto i = 0; i < changeSize; i++) {
+                bool has_mpi = false;
+                if(in_mpi_qubits(mpi_qubits,sortedCur[i].value) || in_mpi_qubits(mpi_qubits,sortedNext[i].value))
+                {
+                    strOut = "SWAP ";
+                    int m = min(sortedCur[i].value,sortedNext[i].value);
+                    int M = max(sortedCur[i].value,sortedNext[i].value);
+                    strOut += to_string(m) + " ";
+                    strOut += to_string(M);
+                    chunkVec[to_string(sortedCur[i].index)] = to_string(sortedNext[i].value);
+                    chunkVec[to_string(sortedNext[i].index)] = to_string(sortedCur[i].value);
+                    ofs << "1" << endl;
+                    ofs << strOut << endl;
+                    has_mpi = true;
+                }
+                if((i + 1 < changeSize) && (in_mpi_qubits(mpi_qubits,sortedCur[i + 1].value) || in_mpi_qubits(mpi_qubits,sortedNext[i + 1].value)))
+                {
+                    if(!has_mpi)
+                    {
+                        strOut = "VSWAP_1_1 ";
+                        strOut += to_string(sortedCur[i].value) + " ";
+                        strOut += to_string(sortedNext[i].value);
+
+                        chunkVec[to_string(sortedCur[i].index)] = to_string(sortedNext[i].value);
+                        chunkVec[to_string(sortedNext[i].index)] = to_string(sortedCur[i].value);
+                        ofs << "1" << endl;
+                        ofs << strOut << endl;
+                    }
+                    strOut = "SWAP ";
+                    int m = min(sortedCur[i + 1].value,sortedNext[i + 1].value);
+                    int M = max(sortedCur[i + 1].value,sortedNext[i + 1].value);
+                    strOut += to_string(m) + " ";
+                    strOut += to_string(M);
+                    chunkVec[to_string(sortedCur[i + 1].index)] = to_string(sortedNext[i + 1].value);
+                    chunkVec[to_string(sortedNext[i + 1].index)] = to_string(sortedCur[i + 1].value);
+                    i++;
+                    ofs << "1" << endl;
+                    ofs << strOut << endl;
+                    has_mpi = true;
+                }
+                if(has_mpi)
+                    continue;
                 if(i + 1 < changeSize) {
                     strOut = "VSWAP_2_2 ";
                     strOut += to_string(sortedCur[i].value) + " ";
@@ -237,6 +281,34 @@ void genCirFile(const string &filename, const string &cirname, vector<string> &g
                 ofs << strOut << endl;
             }
             */
+        }
+    }
+
+    // For Answer Check
+    vector<pair<int,int>>vec;
+    for(auto it:chunkVec)
+        vec.push_back({stoi(it.first),stoi(it.second)});
+    sort(vec.begin(),vec.end());
+    for(int i = 0;i < vec.size();i++)
+    {
+        if(vec[i].first != vec[i].second)
+        {
+            int newidx = vec[i].second;
+            string strtmp = "";
+            if(in_mpi_qubits(mpi_qubits,vec[i].first) || in_mpi_qubits(mpi_qubits,vec[newidx].first))
+            {
+                strtmp = "SWAP " + to_string(vec[i].first) + " " + to_string(vec[newidx].first) + "\n";
+            }
+            else
+            {
+                strtmp = "VSWAP_1_1 " + to_string(vec[i].first) + " " + to_string(vec[newidx].first) + "\n";
+            }
+            ofs << "1\n";
+            ofs << strtmp;
+            int tmp = vec[i].second;
+            vec[i].second = vec[newidx].second;
+            vec[newidx].second = tmp;
+            i--;
         }
     }
     swapping.close();
@@ -782,10 +854,8 @@ int main(int argc, char *argv[]) {
     }
     ofs.close();
 
-
     //const string cirname = "sub.txt";
     genCirFile(filename_swap, cirname, gateVec, chunkVec);
-    
 
     return 0;
 }

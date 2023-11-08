@@ -57,6 +57,7 @@ class Simulator
 
     Gate* setGate_MPI(std::string &);
     void setupCircuit_MPI(std::string);
+    void setupSubCircuits_MPI(std::string);
 
     Gate* setGate_IO(std::string &);
     void setupCircuit_IO(std::string);

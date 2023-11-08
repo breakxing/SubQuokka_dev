@@ -241,10 +241,7 @@ void Simulator::setupCir(string cir){
         exit(1);
     } else if (env.runner_type == "MPI") {
         if(env.is_subcircuit)
-        {
-            cerr << "Not implement yet" << endl;
-            exit(1);
-        }
+            setupSubCircuits_MPI(cir);
         else
             setupCircuit_MPI(cir);
     } else if (env.runner_type == "GPU") {
@@ -365,7 +362,7 @@ Gate *Simulator::setGate_MPI(string &line) {
         return setGate_Phase<CPhase_Gate>(ss, TWO_QUBIT);
     } else if (gate_ops == "RZZ"){
         return setGate_Phase<RZZ_Gate>(ss, TWO_QUBIT);
-    } /*else if (gate_ops == "VSWAP_1_1") {
+    } else if (gate_ops == "VSWAP_1_1") {
         return setGate_vswap<VSWAP_Gate_1_1>(ss, 1);
     } else if (gate_ops == "VSWAP_2_2") {
         return setGate_vswap<VSWAP_Gate_2_2>(ss, 2);
@@ -375,7 +372,7 @@ Gate *Simulator::setGate_MPI(string &line) {
         return setGate_vswap<VSWAP_Gate_4_4>(ss, 4);
     } else if (gate_ops == "VSWAP_6_6") {
         return setGate_vswap<VSWAP_Gate_6_6>(ss, 6);
-    }*/ else {
+    } else {
         cerr << "[setGate]: Not implemented yet." << endl;
         exit(1);
     }
@@ -457,6 +454,25 @@ void Simulator::setupCircuit_MPI(string cir) {
     }
     cirfile.close();
 }
+void Simulator::setupSubCircuits_MPI(string cir) {
+    // read from circuit file
+    ifstream cirfile;
+    cirfile.open(cir);
+    string line;
+    while (getline(cirfile, line)) {
+        int sc_size = stoi(line);
+        vector<Gate *> subcircuit;
+        for (int i = 0; i < sc_size; i++)
+        {
+            getline(cirfile, line);
+            subcircuit.push_back(setGate_MPI(line));
+            // printGateName(subcircuit.back());
+        }
+        subcircuits.push_back(subcircuit);
+    }
+    cirfile.close();
+}
+
 // create a circuit by circuit file
 void Simulator::setupCircuit_IO(string cir) {
     // read from circuit file

@@ -346,7 +346,7 @@ void MPI_Runner::run(vector<Gate *> &circuit) {
             }
             else if(mpi_count <= 2)
             {
-                if(g->name == "SWAP_Gate")
+                if(g->name == "SWAP_Gate" && mpi_count == 2)
                     MPI_Swap(task,g);
                 else
                     MPI_gate_scheduler(task,g);
@@ -360,7 +360,7 @@ void MPI_Runner::run(vector<Gate *> &circuit) {
             }
         }
     #pragma omp barrier
-    #pragma omp single
+    #pragma omp single nowait
     MPI_Barrier(MPI_COMM_WORLD);
     #pragma omp barrier
     }
@@ -376,9 +376,11 @@ void MPI_Runner::run(vector<vector<Gate *>> &subcircuits) {
     {
         int tid = omp_get_thread_num();
         auto task = thread_tasks[tid];
-
+        task.tid = tid;
         for (auto &subcircuit : subcircuits) {
             Gate *g = subcircuit[0];
+            task.fd_using.resize(0);
+            task.fd_offset_using.resize(0);
             if (g->type == VSWAP) {
                 vector<int> targ = subcircuit[0]->targs;  // increasing
                 int file_count = subcircuit[0]->file_count;
@@ -420,90 +422,73 @@ void MPI_Runner::run(vector<vector<Gate *>> &subcircuits) {
                 // ol();
             }
             else {
-                setFD_sub(task);
-                outer_loop_m0(innerloop_sub)
+                if(subcircuit[0]->mpi_count)
+                {
+                    if(subcircuit[0]->name != "SWAP_Gate" || subcircuit.size() != 1)
+                    {
+                        if(task.tid == 0)
+                            cout<<"ERROR"<<endl;
+                        exit(-1);
+                    }
+                    else
+                    {
+                        MPI_gate_scheduler(task,subcircuit[0]);
+                    }
+                }
+                else
+                {
+                    setFD_sub(task);
+                    outer_loop_m0(innerloop_sub)
+                }
             }
             #pragma omp barrier
+            #pragma omp single nowait
+            {
+                MPI_Barrier(MPI_COMM_WORLD);
+            }
         }
+        #pragma omp barrier
+        #pragma omp single nowait
+        {
+            MPI_Barrier(MPI_COMM_WORLD);
+        }
+        #pragma omp barrier
+    }
+    if(MPI_Finalize()!=MPI_SUCCESS)
+    {
+        cout<<"Error"<<endl;
+        exit(-1);
     }
 }
 void MPI_Runner::MPI_Swap(thread_MPI_task &task,Gate * &g)
 {
-    long long mpi_targ_mask_0 = 1 << (g->targs[1] - seg.N);
-    long long mpi_targ_mask_1 = 1 << (g->targs[0] - seg.N);
-    task.partner_using = {int(((long long)env.rank) ^ mpi_targ_mask_0)};
+    long long mpi_targ_mask_0 = 1 << (g->targs[0] - seg.N);
+    long long mpi_targ_mask_1 = 1 << (g->targs[1] - seg.N);
     task.fd_using = {env.fd_arr[task.tid],env.fd_arr[task.tid]};
     task.fd_offset_using = {0};
     long long loop_bound = env.thread_size;
-    long long loop_stride = (env.thread_state == env.chunk_state)? env.chunk_size : (env.chunk_size << 1);
+    long long loop_stride = env.chunk_size;
     bool firstround = true;
-    if(isMpi(g->targs[0]))
-    {
-        if(((env.rank >> (g->targs[1] - seg.N)) & 1) == ((env.rank >> (g->targs[0] - seg.N)) & 1)) return;
-        task.partner_using = {int(((long long)env.rank) ^ mpi_targ_mask_0 ^ mpi_targ_mask_1)};
-        loop_stride = env.chunk_size;
-    }
-    else if(isFile(g->targs[0]))
-    {
-        long long file_mask = 1 << (g->targs[0] - seg.middle - seg.chunk);
-        if(env.thread_state == env.chunk_state && (((env.rank >> (g->targs[1] - seg.N)) & 1) == ((task.tid >> (g->targs[0] - seg.middle - seg.chunk)) & 1))) return;
-        task.fd_using = {env.fd_arr[task.tid & (~file_mask)],env.fd_arr[task.tid | file_mask]};
-    }
-    else if(isMiddle(g->targs[0]))
-    {
-        loop_stride = env.qubit_size[g->targs[0] + 1];
-    }
+    if(((env.rank >> (g->targs[1] - seg.N)) & 1) == ((env.rank >> (g->targs[0] - seg.N)) & 1)) return;
+    task.partner_using = {int(((long long)env.rank) ^ mpi_targ_mask_0 ^ mpi_targ_mask_1)};
     for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
     {
-        if(isMiddle(g->targs[0]))
-        {
-            task.fd_offset_using = env.rank < task.partner_using[0]? vector<long long>{cur_offset + env.qubit_size[g->targs[0]]} : vector<long long>{cur_offset};
-            for(long long j = 0;j < env.qubit_size[g->targs[0]]; j += env.chunk_size)
-            {
-                _thread_swap(task,g,firstround);
-                update_offset(task,env.chunk_size);
-                firstround = false;
-            }
-        }
-        else
-        {
-            _thread_swap(task,g,firstround);
-            update_offset(task,loop_stride);
-            firstround = false;
-        }
+        _thread_swap(task,g,firstround);
+        update_offset(task,loop_stride);
+        firstround = false;
     }
-    
 }
 void MPI_Runner::_thread_swap(thread_MPI_task &task,Gate * &g,bool firstround)
 {
     int partner_rank = task.partner_using[0];
-    long long file_mask = 1 << (g->targs[0] - seg.middle - seg.chunk);
     int member_th = env.rank > partner_rank? 1 : 0;
-    int thread_member_th;//For all thread drive such as D F,otherwise it is 0
-    int recv_tag;
-    if(isFile(g->targs[0]))
-    {
-        thread_member_th = (env.thread_state == env.chunk_state)? 0 : ((task.tid & file_mask)? 1 : 0);
-        recv_tag = (env.thread_state != env.chunk_state)? task.tid : task.tid ^ file_mask;
-    }
-    else
-    {
-        thread_member_th = 0;
-        recv_tag = task.tid;
-    }
-    MPI_Irecv(&task.buffer[(!member_th) * env.chunk_state], env.chunk_state, MPI_DOUBLE_COMPLEX, partner_rank,recv_tag, MPI_COMM_WORLD,&task.request[!member_th]);
+    MPI_Irecv(&task.buffer[(!member_th) * env.chunk_state], env.chunk_state, MPI_DOUBLE_COMPLEX, partner_rank,task.tid, MPI_COMM_WORLD,&task.request[!member_th]);
     if(!firstround)
         MPI_Wait(&task.request[member_th],MPI_STATUS_IGNORE);
-    if(pread(task.fd_using[!member_th],&task.buffer[member_th * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + thread_member_th * env.chunk_size));
+    if(pread(task.fd_using[!member_th],&task.buffer[member_th * env.chunk_state],env.chunk_size,task.fd_offset_using[0]));
     MPI_Isend(&task.buffer[member_th * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request[member_th]);
     MPI_Wait(&task.request[!member_th],MPI_STATUS_IGNORE);
-    if(isChunk(g->targs[0]))
-    {
-        g->run(task.buffer);
-        if(pwrite(task.fd_using[!member_th],&task.buffer[(member_th) * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + thread_member_th * env.chunk_size));
-    }
-    else
-        if(pwrite(task.fd_using[!member_th],&task.buffer[(!member_th) * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + thread_member_th * env.chunk_size));
+    if(pwrite(task.fd_using[!member_th],&task.buffer[(!member_th) * env.chunk_state],env.chunk_size,task.fd_offset_using[0]));
 }
 void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
 {
