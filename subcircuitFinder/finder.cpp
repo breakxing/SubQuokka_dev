@@ -80,7 +80,7 @@ void genCirFile(const string &filename, const string &cirname, vector<string> &g
     ofstream ofs;
     if (openSwapFile(cirname, ofs) == 1)
         exit(-1);
-    vector<int>mpi_qubits = {19,20};
+    vector<int>mpi_qubits = {};
     string line;
     int iter = 0;
     const char delimiter = ' ';
@@ -285,32 +285,32 @@ void genCirFile(const string &filename, const string &cirname, vector<string> &g
     }
 
     // For Answer Check
-    vector<pair<int,int>>vec;
-    for(auto it:chunkVec)
-        vec.push_back({stoi(it.first),stoi(it.second)});
-    sort(vec.begin(),vec.end());
-    for(int i = 0;i < vec.size();i++)
-    {
-        if(vec[i].first != vec[i].second)
-        {
-            int newidx = vec[i].second;
-            string strtmp = "";
-            if(in_mpi_qubits(mpi_qubits,vec[i].first) || in_mpi_qubits(mpi_qubits,vec[newidx].first))
-            {
-                strtmp = "SWAP " + to_string(vec[i].first) + " " + to_string(vec[newidx].first) + "\n";
-            }
-            else
-            {
-                strtmp = "VSWAP_1_1 " + to_string(vec[i].first) + " " + to_string(vec[newidx].first) + "\n";
-            }
-            ofs << "1\n";
-            ofs << strtmp;
-            int tmp = vec[i].second;
-            vec[i].second = vec[newidx].second;
-            vec[newidx].second = tmp;
-            i--;
-        }
-    }
+    // vector<pair<int,int>>vec;
+    // for(auto it:chunkVec)
+    //     vec.push_back({stoi(it.first),stoi(it.second)});
+    // sort(vec.begin(),vec.end());
+    // for(int i = 0;i < vec.size();i++)
+    // {
+    //     if(vec[i].first != vec[i].second)
+    //     {
+    //         int newidx = vec[i].second;
+    //         string strtmp = "";
+    //         if(in_mpi_qubits(mpi_qubits,vec[i].first) || in_mpi_qubits(mpi_qubits,vec[newidx].first))
+    //         {
+    //             strtmp = "SWAP " + to_string(vec[i].first) + " " + to_string(vec[newidx].first) + "\n";
+    //         }
+    //         else
+    //         {
+    //             strtmp = "VSWAP_1_1 " + to_string(vec[i].first) + " " + to_string(vec[newidx].first) + "\n";
+    //         }
+    //         ofs << "1\n";
+    //         ofs << strtmp;
+    //         int tmp = vec[i].second;
+    //         vec[i].second = vec[newidx].second;
+    //         vec[newidx].second = tmp;
+    //         i--;
+    //     }
+    // }
     swapping.close();
     ofs.close();
 }
@@ -766,7 +766,7 @@ int main(int argc, char *argv[]) {
     if (argc >= 4)
         cirname = argv[3];
     
-    size_t qubits = 40;
+    size_t qubits = 30;
     vector<Node> dags (qubits);
     vector<Node*> tails (qubits);
     for(int i = 0; i < qubits; i++)

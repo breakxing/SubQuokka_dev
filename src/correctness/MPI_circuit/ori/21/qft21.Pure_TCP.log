@@ -1,0 +1,16 @@
+[Config File]: MPI_circuit/ori/21/myini.ini
+[Circuit File]: MPI_circuit/ori/21/qft21.txt
+[Config File]: MPI_circuit/ori/21/myini.ini
+[Circuit File]: MPI_circuit/ori/21/qft21.txt
+MPI Mode
+MPI Mode
+[1700078444.878437] [paslab55:22809:0]     ucp_context.c:1177 UCX  WARN  network device 'enp0s31f6' is not available, please use one or more of: 'eno2'(tcp), 'enp1s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
+[1700078444.905265] [paslab37:95046:0]     ucp_context.c:1177 UCX  WARN  network device 'eno2' is not available, please use one or more of: 'enp0s31f6'(tcp), 'enp4s0f1np1'(tcp), 'lo'(tcp), 'mlx5_3:1'(ib), 'vmnet1'(tcp), 'vmnet8'(tcp)
+[1700078444.925739] [paslab55:22809:0]     ucp_context.c:1177 UCX  WARN  network device 'enp0s31f6' is not available, please use one or more of: 'eno2'(tcp), 'enp1s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
+[1700078444.942232] [paslab37:95046:0]     ucp_context.c:1177 UCX  WARN  network device 'eno2' is not available, please use one or more of: 'enp0s31f6'(tcp), 'enp4s0f1np1'(tcp), 'lo'(tcp), 'mlx5_3:1'(ib), 'vmnet1'(tcp), 'vmnet8'(tcp)
+[1700078444.964223] [paslab55:22809:0]     ucp_context.c:1177 UCX  WARN  network device 'enp0s31f6' is not available, please use one or more of: 'eno2'(tcp), 'enp1s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
+[1700078444.992613] [paslab37:95046:0]     ucp_context.c:1177 UCX  WARN  network device 'eno2' is not available, please use one or more of: 'enp0s31f6'(tcp), 'enp4s0f1np1'(tcp), 'lo'(tcp), 'mlx5_3:1'(ib), 'vmnet1'(tcp), 'vmnet8'(tcp)
+4.65343s
+4.65385s
+Rank0 MPI_Finalize Success
+Rank1 MPI_Finalize Success

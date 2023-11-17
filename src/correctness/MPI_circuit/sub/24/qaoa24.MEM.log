@@ -1,0 +1,4 @@
+[Circuit File]: circuit_io/sub/24/qaoa24.txt
+[Config File]: MPI_circuit/sub/24/myini.ini
+MEM Mode
+16.85s

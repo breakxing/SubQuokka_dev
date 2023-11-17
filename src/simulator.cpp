@@ -715,7 +715,8 @@ void Simulator::run() {
          << flush;
     
     std::cerr << env.is_subcircuit << std::endl;
-
+    if(env.is_MPI)
+        MPI_Barrier(MPI_COMM_WORLD);
     double start = omp_get_wtime();
     if(env.is_subcircuit)
         Runner->run(subcircuits);
@@ -730,14 +731,14 @@ void Simulator::run() {
 
     // cerr << "before dump" << endl;
     // cerr << "env.dumpfile: " << env.dumpfile << endl;
-    if(env.runner_type == "MEM" && env.dumpfile != ""){
-        // cerr << "inside dump" << endl;
-        ofstream resfile;
-        resfile.open(env.dumpfile);
-        for(auto &x :static_cast<MEM_Runner *>(Runner)->buffer)
-        resfile << fixed << setprecision(11) << x.real() << endl << x.imag() << endl;
-        resfile.close();
-    }
+    // if(env.runner_type == "MEM" && env.dumpfile != ""){
+    //     // cerr << "inside dump" << endl;
+    //     ofstream resfile;
+    //     resfile.open(env.dumpfile);
+    //     for(auto &x :static_cast<MEM_Runner *>(Runner)->buffer)
+    //     resfile << fixed << setprecision(11) << x.real() << endl << x.imag() << endl;
+    //     resfile.close();
+    // }
     return;
 }
 
@@ -760,6 +761,18 @@ Simulator::Simulator(string ini, string cir) {
 }
 
 Simulator::~Simulator() {
+    if(env.is_MPI)
+    {
+        if(MPI_Finalize()!=MPI_SUCCESS)
+        {
+            cout<<"Error"<<endl;
+            exit(-1);
+        }
+        else
+        {
+            cout<<"Rank"<<env.rank<<" MPI_Finalize Success"<<endl;
+        }
+    }
     for(auto &g:circuit)
         delete g;
     for(auto &gg:subcircuits)

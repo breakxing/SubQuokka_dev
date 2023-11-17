@@ -135,11 +135,6 @@ thread_MPI_task::thread_MPI_task(int tid) {
             fd_offset_table.push_back(0);
         }
     }
-    for(int i = 0;i < seg.mpi;i++)
-    {
-        fd_table.push_back(tid);
-        fd_offset_table.push_back(0);
-    }
 }
 
 MPI_Runner::MPI_Runner() {
@@ -156,14 +151,7 @@ MPI_Runner::MPI_Runner() {
     }
     for (int i = 0; i < env.num_thread; i++) {
         thread_tasks.push_back(thread_MPI_task(i));
-        if(env.is_MPI)
-            thread_tasks[i].buffer.resize(16 * env.chunk_state);
-        else if (env.is_directIO) {
-            thread_tasks[i].buffer.resize(8 * env.chunk_state); // 64 for VSWAP_6_6, 8 for normal use.
-            // posix_memalign(thread_tasks[i].buffer, 4096, 8 * env.chunk_state * sizeof(complex<double>)); // 64 for VSWAP_6_6, 8 for normal use.
-        }
-        else
-            thread_tasks[i].buffer.resize(8 * env.chunk_state); // 64 for VSWAP_6_6, 8 for normal use.
+        thread_tasks[i].buffer.resize(16 * env.chunk_state);
     }
 }
 void MPI_Runner::setFD(thread_MPI_task &task, Gate *&gate) {
@@ -318,8 +306,6 @@ void MPI_Runner::run(vector<Gate *> &circuit) {
             int file_count = g->file_count;
             int middle_count = g->middle_count;
             int chunk_count = g->chunk_count;
-            task.fd_using.resize(0);
-            task.fd_offset_using.resize(0);
             if(mpi_count == 0)
             {
                 setFD(task, g);
@@ -354,20 +340,10 @@ void MPI_Runner::run(vector<Gate *> &circuit) {
             else
                 exit(-1);
             #pragma omp barrier
-            #pragma omp single nowait
-            {
-                MPI_Barrier(MPI_COMM_WORLD);
-            }
         }
-    #pragma omp barrier
-    #pragma omp single nowait
+    #pragma omp master
     MPI_Barrier(MPI_COMM_WORLD);
     #pragma omp barrier
-    }
-    if(MPI_Finalize()!=MPI_SUCCESS)
-    {
-        cout<<"Error"<<endl;
-        exit(-1);
     }
 }
 
@@ -442,22 +418,10 @@ void MPI_Runner::run(vector<vector<Gate *>> &subcircuits) {
                 }
             }
             #pragma omp barrier
-            #pragma omp single nowait
-            {
-                MPI_Barrier(MPI_COMM_WORLD);
-            }
         }
+        #pragma omp master
+        MPI_Barrier(MPI_COMM_WORLD);
         #pragma omp barrier
-        #pragma omp single nowait
-        {
-            MPI_Barrier(MPI_COMM_WORLD);
-        }
-        #pragma omp barrier
-    }
-    if(MPI_Finalize()!=MPI_SUCCESS)
-    {
-        cout<<"Error"<<endl;
-        exit(-1);
     }
 }
 void MPI_Runner::MPI_Swap(thread_MPI_task &task,Gate * &g)
@@ -543,7 +507,6 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
                     update_offset(task,loop_stride);
                 }
             }
-
         }
         else if(isFile(g->targs[0]))
         {
@@ -634,6 +597,7 @@ void MPI_Runner::_thread_read1_recv1(thread_MPI_task &task,Gate * &g)
     int num_worker = (env.chunk_state == env.thread_state)? 1 : 2;
     int member_th = env.rank > task.partner_using[0]? 1 : 0;
     int partner_rank = task.partner_using[0];
+
     MPI_Irecv(&task.buffer[(!member_th) * env.chunk_state], env.chunk_state, MPI_DOUBLE_COMPLEX, partner_rank,task.tid, MPI_COMM_WORLD,&task.request[!member_th]);
     if(num_worker == 2)
     {
@@ -782,7 +746,7 @@ int MPI_Runner::Get_Next_Undone_Buffer_index(vector<MPI_Request> &request,vector
     }
     return res;
 }
-void MPI_Runner::update_offset(thread_MPI_task &task,long long off)
+void MPI_Runner::update_offset(thread_MPI_task &task,long long &off)
 {
     for(auto &x:task.fd_offset_using)
     {

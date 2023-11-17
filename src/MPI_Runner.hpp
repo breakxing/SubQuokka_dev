@@ -32,7 +32,7 @@ class MPI_Runner: public Simulator::circuitRunner {
     void _thread_read1_recv3(thread_MPI_task &,Gate * &,int);
     void _thread_no_exec_MPI(thread_MPI_task &,int round);
     int Get_Next_Undone_Buffer_index(vector<MPI_Request> &,vector<bool>&,int ,int);
-    void update_offset(thread_MPI_task &,long long);
+    void update_offset(thread_MPI_task &,long long&);
 
 public:
     MPI_Runner();

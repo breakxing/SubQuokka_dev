@@ -131,7 +131,7 @@ thread_DIO_task::thread_DIO_task(int tid) {
 DIO_Runner::DIO_Runner() {
     for (int i = 0; i < env.num_thread; i++) {
         thread_tasks.push_back(thread_DIO_task(i));
-        posix_memalign((void **)(&(thread_tasks[i].buffer)), 4096, 8 * env.chunk_size); // 64 for VSWAP_6_6, 8 for normal use.
+        if(posix_memalign((void **)(&(thread_tasks[i].buffer)), 4096, 8 * env.chunk_size)); // 64 for VSWAP_6_6, 8 for normal use.
     }
 }
 

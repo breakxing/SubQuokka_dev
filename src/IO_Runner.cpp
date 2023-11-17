@@ -133,11 +133,6 @@ thread_IO_task::thread_IO_task(int tid) {
             fd_offset_table.push_back(0);
         }
     }
-    for(int i = 0;i < seg.mpi;i++)
-    {
-        fd_table.push_back(tid);
-        fd_offset_table.push_back(0);
-    }
 }
 
 IO_Runner::IO_Runner() {
