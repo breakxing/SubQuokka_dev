@@ -4,7 +4,7 @@ from test_util import *
 import os
 
 
-file_seg = 3
+file_seg = 5
 chunk_seg = 12
 
 ini_path = "res.ini"
@@ -13,11 +13,12 @@ state_paths = ",".join(state_paths)
 
 cir_path = "cir.txt"
 cir = get_circuit()
-N = 32
-mpiqubit = 0
+N = 30
+mpiqubit = 1
 # for i in range(1):
 for i in range(10):
     H(cir,12)
+    
 create_circuit(cir, cir_path)
 
 os.chdir("..")
@@ -36,17 +37,18 @@ for n in [N]:
         # simple_test(f"[H {n} subcircuit]", False, cir_path, state_paths, n, (1 << file_seg))
     else:
         os.chdir("..")
-        os.system("scp -r -P 9037 ./*.cpp rdma2:~/SubQuokka/src/")
-        os.system("scp -r -P 9037 ./*.hpp rdma2:~/SubQuokka/src/")
-        os.system("scp -r -P 9037 ./*.h rdma2:~/SubQuokka/src/")
-        os.system(f"scp -r -P 9037 ./correctness/{ini_path} rdma2:~/SubQuokka/src/correctness/")
-        os.system(f"scp -r -P 9037 ./correctness/{cir_path} rdma2:~/SubQuokka/src/correctness/")
-        os.system("scp -r -P 9037 ./Quokka rdma2:~/SubQuokka/src/")
+        # os.system("scp -r -P 9048 ./*.cpp rdma2:~/SubQuokka_dev/src/")
+        # os.system("scp -r -P 9048 ./*.hpp rdma2:~/SubQuokka_dev/src/")
+        # os.system("scp -r -P 9048 ./*.h rdma2:~/SubQuokka_dev/src/")
+        os.system(f"scp -r -P 9048 ./correctness/{ini_path} rdma2:~/SubQuokka_dev/src/correctness/")
+        os.system(f"scp -r -P 9048 ./correctness/{cir_path} rdma2:~/SubQuokka_dev/src/correctness/")
+        input("Go other computer to make")
+        # os.system("scp -r -P 9048 ./Quokka rdma2:~/SubQuokka_dev/src/")
         os.chdir("correctness")
         os.system(f"mpirun -x LD_LIBRARY_PATH --bind-to none --hostfile ../hf --map-by ppr:1:node \"$(pwd)/../Quokka\" -i {ini_path} -c {cir_path}")
         # os.system(f"mpirun -np 4 ../Quokka -i {ini_path} -c {cir_path}")
         # for i in range(8,16):
-        #     # os.system(f"scp -P 9037 paslab@140.112.90.37:~/SubQuokka/src/correctness/state1/path{i - 8} ./state0/path{i}")
+        #     # os.system(f"scp -P 9048 paslab@140.112.90.37:~/SubQuokka_dev/src/correctness/state1/path{i - 8} ./state0/path{i}")
         #     os.system(f"cp ./state1/path{i - 8} ./state0/path{i}")
         #     os.system(f"cp ./state2/path{i - 8} ./state0/path{i + 8}")
         #     os.system(f"cp ./state3/path{i - 8} ./state0/path{i + 16}")

@@ -1,4 +1,4 @@
 [Circuit File]: circuit_io/ori/24/qaoa24.txt
 [Config File]: MPI_circuit/ori/24/myini.ini
 MEM Mode
-26.2067s
+14.1942s
