@@ -312,6 +312,12 @@ void MPI_Runner::run(vector<Gate *> &circuit) {
                     all_thread_drive_scheduler(task,g);
                 else
                 {
+                    if (file_count > 0 && skipThread(tid, targ)) 
+                    {
+                        #pragma omp barrier
+                        continue;
+                    }
+                    setFD(task, g);
                     switch(middle_count){
                         case 0:
                             outer_loop_m0(innerloop)
@@ -354,8 +360,6 @@ void MPI_Runner::run(vector<vector<Gate *>> &subcircuits) {
         task.tid = tid;
         for (auto &subcircuit : subcircuits) {
             Gate *g = subcircuit[0];
-            task.fd_using.resize(0);
-            task.fd_offset_using.resize(0);
             if (g->type == VSWAP) {
                 vector<int> targ = subcircuit[0]->targs;  // increasing
                 int file_count = subcircuit[0]->file_count;
@@ -554,7 +558,7 @@ void MPI_Runner::all_thread_drive_vs2_2(thread_MPI_task &task,Gate * &g)
         {
             for(long long cur_offset = 0;cur_offset < (env.thread_size >> 1);cur_offset += env.qubit_size[targ[2] + 1])
             {
-                inner_all_thread(task,g,env.qubit_size[targ[0]],4,true);
+                inner_all_thread(task,g,env.qubit_size[targ[2]],4,true);
                 task.fd_offset_using[0] += env.qubit_size[targ[2]];
                 task.fd_offset_using[1] += env.qubit_size[targ[2]];
                 task.fd_offset_using[2] += env.qubit_size[targ[2]];

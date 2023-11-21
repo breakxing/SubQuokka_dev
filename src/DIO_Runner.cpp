@@ -299,6 +299,11 @@ void DIO_Runner::run(vector<Gate *> &circuit) {
                 all_thread_drive_scheduler(task,g);
             else
             {
+                if (file_count > 0 && skipThread(tid, targ)) 
+                {
+                    #pragma omp barrier
+                    continue;
+                }
                 setFD(task, g);
 
                 switch(middle_count){
@@ -514,7 +519,7 @@ void DIO_Runner::all_thread_drive_vs2_2(thread_DIO_task &task,Gate * &g)
         {
             for(long long cur_offset = 0;cur_offset < (env.thread_size >> 1);cur_offset += env.qubit_size[targ[2] + 1])
             {
-                inner_all_thread(task,g,env.qubit_size[targ[0]],4,true);
+                inner_all_thread(task,g,env.qubit_size[targ[2]],4,true);
                 task.fd_offset_using[0] += env.qubit_size[targ[2]];
                 task.fd_offset_using[1] += env.qubit_size[targ[2]];
                 task.fd_offset_using[2] += env.qubit_size[targ[2]];
