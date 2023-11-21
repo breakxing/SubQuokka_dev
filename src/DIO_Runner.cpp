@@ -295,33 +295,32 @@ void DIO_Runner::run(vector<Gate *> &circuit) {
             int file_count = g->file_count;
             int middle_count = g->middle_count;
             int chunk_count = g->chunk_count;
-            
-            if (file_count > 0 && skipThread(tid, targ)) {
-#pragma omp barrier
-                continue;
-            }
+            if(file_count != 0 && g->type != THREE_QUBIT)
+                all_thread_drive_scheduler(task,g);
+            else
+            {
+                setFD(task, g);
 
-            setFD(task, g);
+                switch(middle_count){
+                    case 0:
+                        outer_loop_m0(innerloop)
+                        break;
 
-            switch(middle_count){
-                case 0:
-                    outer_loop_m0(innerloop)
-                    break;
+                    case 1:
+                        outer_loop_m1(innerloop, targ[chunk_count])
+                        break;
 
-                case 1:
-                    outer_loop_m1(innerloop, targ[chunk_count])
-                    break;
+                    case 2:
+                        outer_loop_m2(innerloop, targ[chunk_count], targ[chunk_count+1])
+                        break;
+                    
+                    // case 3:
+                    //     ol = bind(outer_loop_m3, ref(task), ref(il), targ[chunk_count], targ[chunk_count+1], targ[chunk_count+2]);
+                    //     break;
 
-                case 2:
-                    outer_loop_m2(innerloop, targ[chunk_count], targ[chunk_count+1])
-                    break;
-                
-                // case 3:
-                //     ol = bind(outer_loop_m3, ref(task), ref(il), targ[chunk_count], targ[chunk_count+1], targ[chunk_count+2]);
-                //     break;
-
-                default:
-                    exit(-1);
+                    default:
+                        exit(-1);
+                }
             }
 #pragma omp barrier
         }
@@ -341,46 +340,210 @@ void DIO_Runner::run(vector<vector<Gate *>> &subcircuits) {
                 int file_count = subcircuit[0]->file_count;
                 int middle_count = subcircuit[0]->middle_count;
                 int chunk_count = subcircuit[0]->chunk_count;
-
-                if (file_count > 0 && skipThread(tid, targ)) {
-                    #pragma omp barrier
-                    continue;
+                if(file_count != 0)
+                {
+                    if(g->name == "VSWAP_Gate_1_1")
+                        all_thread_drive_scheduler(task,g);
+                    else
+                        all_thread_drive_vs2_2(task,g);
                 }
+                else
+                {
+                    setFD(task, subcircuit[0]);
 
-                setFD(task, subcircuit[0]);
+                    switch(middle_count){
+                        case 0:
+                            outer_loop_m0(innerloop)
+                            break;
 
-                switch(middle_count){
-                    case 0:
-                        outer_loop_m0(innerloop)
-                        break;
+                        case 1:
+                            outer_loop_m1(innerloop, targ[chunk_count])
+                            break;
 
-                    case 1:
-                        outer_loop_m1(innerloop, targ[chunk_count])
-                        break;
-
-                    case 2:
-                        outer_loop_m2(innerloop, targ[chunk_count], targ[chunk_count+1])
-                        break;
+                        case 2:
+                            outer_loop_m2(innerloop, targ[chunk_count], targ[chunk_count+1])
+                            break;
+                            
+                        // case 3:
+                        //     ol = bind(outer_loop_m3, ref(task), ref(il), targ[chunk_count], targ[chunk_count+1], targ[chunk_count+2]);
+                        //     break;
                         
-                    // case 3:
-                    //     ol = bind(outer_loop_m3, ref(task), ref(il), targ[chunk_count], targ[chunk_count+1], targ[chunk_count+2]);
-                    //     break;
-                    
-                    default:
-                        vector<int> m;
-                        for (int i = chunk_count; i < chunk_count+middle_count; i++) {
-                            m.push_back(targ[i]);
-                        }
-                        // ol = bind(outer_loop_m4up, ref(task), ref(il), m);
-                        break;
+                        default:
+                            vector<int> m;
+                            for (int i = chunk_count; i < chunk_count+middle_count; i++) {
+                                m.push_back(targ[i]);
+                            }
+                            // ol = bind(outer_loop_m4up, ref(task), ref(il), m);
+                            break;
+                    }
+                    // ol();
                 }
-                // ol();
             }
             else {
                 setFD_sub(task);
                 outer_loop_m0(innerloop_sub)
             }
             #pragma omp barrier
+        }
+    }
+}
+void DIO_Runner::all_thread_drive_scheduler(thread_DIO_task &task,Gate * &g)
+{
+    vector<int> targ = g->targs;
+    int tid = task.fd_table[0];
+    long long func_loop_size;
+    if(targ.size() == 1)
+    {
+        long long file_mask = 1 << (g->targs[0] - seg.middle - seg.chunk);
+        int fd0 = tid & (~file_mask);
+        int fd1 = tid | file_mask;
+        if(env.thread_state == env.chunk_state && tid == fd1) return;
+        task.fd_using = {env.fd_arr[fd0],env.fd_arr[fd1]};
+        func_loop_size = (env.thread_state == env.chunk_state)? env.thread_size : env.thread_size >> 1;
+        task.fd_offset_using = (tid == fd0)? vector<long long>{0,0} : vector<long long>{func_loop_size,func_loop_size};
+        inner_all_thread(task,g,func_loop_size,2,true);
+    }
+    else if(targ.size() == 2)
+    {
+        long long file_mask_left = 1 << (g->targs[1] - seg.middle - seg.chunk);
+        long long file_mask_right = 1 << (g->targs[0] - seg.middle - seg.chunk);
+        if(isFile(targ[0]))
+        {
+            int fd0 = tid & (~file_mask_left) & (~file_mask_right);
+            int fd1 = fd0 | file_mask_right;
+            int fd2 = fd0 | file_mask_left;
+            int fd3 = fd1 | file_mask_left;
+            task.fd_using = {env.fd_arr[fd0],env.fd_arr[fd1],env.fd_arr[fd2],env.fd_arr[fd3]};
+            int shift = min(int(log2(env.thread_state / env.chunk_state)),2);
+            func_loop_size = env.thread_size >> shift;
+            vector<long long>off0 = {0}; off0.resize(4,off0[0]);
+            vector<long long>off1 = {func_loop_size}; off1.resize(4,off1[0]);
+            vector<long long>off2 = {func_loop_size << 1};off2.resize(4,off2[0]);
+            vector<long long>off3 = {func_loop_size * 3};off3.resize(4,off3[0]);
+            unordered_map<int,vector<long long>>m = {{fd0,off0},{fd1,off1},{fd2,off2},{fd3,off3}};
+            task.fd_offset_using = m[tid];
+            if((shift == 0) && (tid != fd0)) return;
+            else if((shift == 1) && (tid != fd0 && tid != fd1)) return;
+            inner_all_thread(task,g,func_loop_size,4,true);
+        }
+        else if(isMiddle(targ[0]))
+        {
+            int fd0 = tid & (~file_mask_left);
+            int fd1 = tid | file_mask_left;
+            task.fd_using = {env.fd_arr[fd0],env.fd_arr[fd0],env.fd_arr[fd1],env.fd_arr[fd1]};
+            long long base1 = 0;
+            long long base2 = env.qubit_size[targ[0]];
+            bool cond1 = env.thread_state == env.qubit_offset[targ[0] + 1];
+            bool cond2 = env.chunk_state == env.qubit_offset[targ[0]];
+            func_loop_size = (cond1 && !cond2)?env.qubit_size[targ[0] - 1] : env.qubit_size[targ[0]];
+            if(cond1 && cond2 && tid == fd1) return;
+            task.fd_offset_using = {base1,base2,base1,base2};
+            if(cond1 && !cond2 && tid == fd1) task.fd_offset_using = {base1 + (env.qubit_size[targ[0] - 1]),base2 + (env.qubit_size[targ[0] - 1]),base1 + (env.qubit_size[targ[0] - 1]),base2 + (env.qubit_size[targ[0] - 1])};
+            if(!cond1 && tid == fd1) task.fd_offset_using = {base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1),base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1)};
+            if(cond1)
+                inner_all_thread(task,g,func_loop_size,4,true);
+            else
+            {
+                for(long long cur_offset = 0;cur_offset < (env.thread_size >> 1);cur_offset += env.qubit_size[targ[0] + 1])
+                {
+                    inner_all_thread(task,g,env.qubit_size[targ[0]],4,true);
+                    task.fd_offset_using[0] += env.qubit_size[targ[0]];
+                    task.fd_offset_using[1] += env.qubit_size[targ[0]];
+                    task.fd_offset_using[2] += env.qubit_size[targ[0]];
+                    task.fd_offset_using[3] += env.qubit_size[targ[0]];
+                }
+            }
+        }
+        else
+        {
+            int fd0 = tid & (~file_mask_left);
+            int fd1 = tid | file_mask_left;
+            if(env.thread_state == env.chunk_state && tid == fd1) return;
+            task.fd_using = {env.fd_arr[fd0],env.fd_arr[fd1]};
+            func_loop_size = (env.thread_state == env.chunk_state)? env.thread_size : env.thread_size >> 1;
+            unordered_map<int,vector<long long>>m = {{fd0,{0,0}},{fd1,{func_loop_size,func_loop_size}}};
+            task.fd_offset_using = m[tid];
+            inner_all_thread(task,g,func_loop_size,2,true);
+        }
+    }
+}
+void DIO_Runner::all_thread_drive_vs2_2(thread_DIO_task &task,Gate * &g)
+{
+    vector<int> targ = g->targs;
+    int tid = task.fd_table[0];
+    long long func_loop_size;
+    if(isFile(targ[2]))//L L D D
+    {
+        long long file_mask_left = 1 << (g->targs[3] - seg.middle - seg.chunk);
+        long long file_mask_right = 1 << (g->targs[2] - seg.middle - seg.chunk);
+        int fd0 = tid & (~file_mask_left) & (~file_mask_right);
+        int fd1 = fd0 | file_mask_right;
+        int fd2 = fd0 | file_mask_left;
+        int fd3 = fd1 | file_mask_left;
+        task.fd_using = {env.fd_arr[fd0],env.fd_arr[fd1],env.fd_arr[fd2],env.fd_arr[fd3]};
+        int shift = min(int(log2(env.thread_state / env.chunk_state)),2);
+        func_loop_size = env.thread_size >> shift;
+        vector<long long>off0 = {0}; off0.resize(4,off0[0]);
+        vector<long long>off1 = {func_loop_size}; off1.resize(4,off1[0]);
+        vector<long long>off2 = {func_loop_size << 1};off2.resize(4,off2[0]);
+        vector<long long>off3 = {func_loop_size * 3};off3.resize(4,off3[0]);
+        unordered_map<int,vector<long long>>m = {{fd0,off0},{fd1,off1},{fd2,off2},{fd3,off3}};
+        task.fd_offset_using = m[tid];
+        if((shift == 0) && (tid != fd0)) return;
+        else if((shift == 1) && (tid != fd0 && tid != fd1)) return;
+        inner_all_thread(task,g,func_loop_size,4,true);
+    }
+    else//L L M D
+    {
+        long long file_mask = 1 << (g->targs[3] - seg.middle - seg.chunk);
+        int fd0 = tid & (~file_mask);
+        int fd1 = tid | file_mask;
+        task.fd_using = {env.fd_arr[fd0],env.fd_arr[fd0],env.fd_arr[fd1],env.fd_arr[fd1]};
+        long long base1 = 0;
+        long long base2 = env.qubit_size[targ[2]];
+        bool cond1 = env.thread_state == env.qubit_offset[targ[2] + 1];
+        bool cond2 = env.chunk_state == env.qubit_offset[targ[2]];
+        func_loop_size = (cond1 && !cond2)?env.qubit_size[targ[2] - 1] : env.qubit_size[targ[2]];
+        if(cond1 && cond2 && tid == fd1) return;
+        task.fd_offset_using = {base1,base2,base1,base2};
+        if(cond1 && !cond2 && tid == fd1) task.fd_offset_using = {base1 + (env.qubit_size[targ[2] - 1]),base2 + (env.qubit_size[targ[2] - 1]),base1 + (env.qubit_size[targ[2] - 1]),base2 + (env.qubit_size[targ[2] - 1])};
+        if(!cond1 && tid == fd1) task.fd_offset_using = {base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1),base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1)};
+        if(cond1)
+            inner_all_thread(task,g,func_loop_size,4,true);
+        else
+        {
+            for(long long cur_offset = 0;cur_offset < (env.thread_size >> 1);cur_offset += env.qubit_size[targ[2] + 1])
+            {
+                inner_all_thread(task,g,env.qubit_size[targ[0]],4,true);
+                task.fd_offset_using[0] += env.qubit_size[targ[2]];
+                task.fd_offset_using[1] += env.qubit_size[targ[2]];
+                task.fd_offset_using[2] += env.qubit_size[targ[2]];
+                task.fd_offset_using[3] += env.qubit_size[targ[2]];
+            }
+        }
+    }
+}
+void DIO_Runner::inner_all_thread(thread_DIO_task &task,Gate * &g,long long func_loop_size,int round,bool exe)
+{
+    for(long long i = 0;i < func_loop_size;i += env.chunk_size)
+    {
+        for(int j = 0;j < round;j++)
+        {
+            if(pread(task.fd_using[j],&task.buffer[j * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
+        }
+        if(exe)
+            g->run_dio(task.buffer);
+        for(int j = 0;j < round;j++)
+        {
+            if(exe)
+            {
+                if(pwrite(task.fd_using[j],&task.buffer[j * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
+            }
+            else
+            {
+                if(pwrite(task.fd_using[j],&task.buffer[(round - 1 - j) * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
+            }
+            task.fd_offset_using[j] += env.chunk_size;
         }
     }
 }

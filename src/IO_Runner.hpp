@@ -25,6 +25,7 @@ class IO_Runner: public Simulator::circuitRunner {
     void setFD_sub(thread_IO_task &);
     void inner_all_thread(thread_IO_task &,Gate * &,long long,int,bool);
     void all_thread_drive_scheduler(thread_IO_task &,Gate * &);
+    void all_thread_drive_vs2_2(thread_IO_task &,Gate * &);
 public:
     IO_Runner();
     void run(std::vector<Gate *> &) override;

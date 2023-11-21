@@ -731,14 +731,14 @@ void Simulator::run() {
 
     // cerr << "before dump" << endl;
     // cerr << "env.dumpfile: " << env.dumpfile << endl;
-    // if(env.runner_type == "MEM" && env.dumpfile != ""){
-    //     // cerr << "inside dump" << endl;
-    //     ofstream resfile;
-    //     resfile.open(env.dumpfile);
-    //     for(auto &x :static_cast<MEM_Runner *>(Runner)->buffer)
-    //     resfile << fixed << setprecision(11) << x.real() << endl << x.imag() << endl;
-    //     resfile.close();
-    // }
+    if(env.runner_type == "MEM" && env.dumpfile != ""){
+        // cerr << "inside dump" << endl;
+        ofstream resfile;
+        resfile.open(env.dumpfile);
+        for(auto &x :static_cast<MEM_Runner *>(Runner)->buffer)
+        resfile << fixed << setprecision(11) << x.real() << endl << x.imag() << endl;
+        resfile.close();
+    }
     return;
 }
 
