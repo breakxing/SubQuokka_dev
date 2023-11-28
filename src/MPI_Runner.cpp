@@ -68,6 +68,12 @@
     int osz = task.fd_offset_using.size();\
     for (int ii = 0; ii < fsz; ii++) {\
         for (int jj = 0; jj < osz; jj++) {\
+            if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (ii * osz + jj == 0) && (!isChunk(targ[0])))\
+                continue;\
+            else if((g->name == "SWAP_Gate") && (ii * osz + jj == 0 || ii * osz + jj == 3) && (!isChunk(targ[0])))\
+                continue;\
+            else if(g->name == "CPhase_Gate" && (ii * osz + jj != 3) && (!isChunk(targ[1])))\
+                continue;\
             if(pread(env.fd_arr[task.fd_using[ii]], &(task.buffer[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
                 ;\
         }\
@@ -75,6 +81,12 @@
     g->run(task.buffer);\
     for (int ii = 0; ii < fsz; ii++) {\
         for (int jj = 0; jj < osz; jj++) {\
+            if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (ii * osz + jj == 0) && (!isChunk(targ[0])))\
+                continue;\
+            else if((g->name == "SWAP_Gate") && (ii * osz + jj == 0 || ii * osz + jj == 3) && (!isChunk(targ[0])))\
+                continue;\
+            else if(g->name == "CPhase_Gate" && (ii * osz + jj != 3) && (!isChunk(targ[1])))\
+                continue;\
             if(pwrite(env.fd_arr[task.fd_using[ii]], &(task.buffer[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
                 ;\
         }\
@@ -573,11 +585,17 @@ void MPI_Runner::inner_all_thread(thread_MPI_task &task,Gate * &g,long long func
     {
         for(int j = 0;j < round;j++)
         {
+            if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (j == 0) && (!isChunk(g->targs[0]))) {cout<<"BBB\n"; continue;}
+            else if((g->name == "SWAP_Gate") && (j == 0 || j == 3) && (!isChunk(g->targs[0]))) continue;
+            else if(g->name == "CPhase_Gate" && (j != 3) && (!isChunk(g->targs[1]))) continue;
             if(pread(task.fd_using[j],&task.buffer[j * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
         }
         g->run(task.buffer);
         for(int j = 0;j < round;j++)
         {
+            if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (j == 0) && (!isChunk(g->targs[0]))) {cout<<"BBB\n"; continue;}
+            else if((g->name == "SWAP_Gate") && (j == 0 || j == 3) && (!isChunk(g->targs[0]))) continue;
+            else if(g->name == "CPhase_Gate" && (j != 3) && (!isChunk(g->targs[1]))) continue;
             if(pwrite(task.fd_using[j],&task.buffer[j * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
             task.fd_offset_using[j] += env.chunk_size;
         }
