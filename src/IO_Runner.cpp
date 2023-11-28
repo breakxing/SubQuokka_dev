@@ -67,6 +67,12 @@
     int osz = task.fd_offset_using.size();\
     for (int ii = 0; ii < fsz; ii++) {\
         for (int jj = 0; jj < osz; jj++) {\
+            if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (ii * osz + jj == 0) && (!isChunk(targ[0])))\
+                continue;\
+            else if((g->name == "SWAP_Gate" || g->name == "VSWAP_Gate_1_1") && (ii * osz + jj == 0 || ii * osz + jj == 3) && (!isChunk(targ[0])))\
+                continue;\
+            else if(g->name == "CPhase_Gate" && (ii * osz + jj != 3) && (!isChunk(targ[0])))\
+                continue;\
             if(pread(env.fd_arr[task.fd_using[ii]], &(task.buffer[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
                 ;\
         }\
@@ -74,6 +80,12 @@
     g->run(task.buffer);\
     for (int ii = 0; ii < fsz; ii++) {\
         for (int jj = 0; jj < osz; jj++) {\
+            if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (ii * osz + jj == 0) && (!isChunk(targ[0])))\
+                continue;\
+            else if((g->name == "SWAP_Gate" || g->name == "VSWAP_Gate_1_1") && (ii * osz + jj == 0 || ii * osz + jj == 3) && (!isChunk(targ[0])))\
+                continue;\
+            else if(g->name == "CPhase_Gate" && (ii * osz + jj != 3) && (!isChunk(targ[0])))\
+                continue;\
             if(pwrite(env.fd_arr[task.fd_using[ii]], &(task.buffer[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
                 ;\
         }\

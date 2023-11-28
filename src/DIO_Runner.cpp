@@ -347,7 +347,7 @@ void DIO_Runner::run(vector<vector<Gate *>> &subcircuits) {
                 int chunk_count = subcircuit[0]->chunk_count;
                 if(file_count != 0)
                 {
-                    if(g->name == "VSWAP_Gate_1_1")
+                    if(g->name == "VSWAP_Gate_1_1_DIO")
                         all_thread_drive_scheduler(task,g);
                     else
                         all_thread_drive_vs2_2(task,g);
