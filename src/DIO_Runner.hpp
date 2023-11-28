@@ -23,7 +23,7 @@ class DIO_Runner: public Simulator::circuitRunner {
     std::vector<thread_DIO_task> thread_tasks;
     void setFD(thread_DIO_task &, Gate * &);
     void setFD_sub(thread_DIO_task &);
-    void inner_all_thread(thread_DIO_task &,Gate * &,long long,int,bool);
+    void inner_all_thread(thread_DIO_task &,Gate * &,long long,int);
     void all_thread_drive_scheduler(thread_DIO_task &,Gate * &);
     void all_thread_drive_vs2_2(thread_DIO_task &,Gate * &);
 public:

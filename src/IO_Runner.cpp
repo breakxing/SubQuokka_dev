@@ -69,9 +69,9 @@
         for (int jj = 0; jj < osz; jj++) {\
             if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (ii * osz + jj == 0) && (!isChunk(targ[0])))\
                 continue;\
-            else if((g->name == "SWAP_Gate" || g->name == "VSWAP_Gate_1_1") && (ii * osz + jj == 0 || ii * osz + jj == 3) && (!isChunk(targ[0])))\
+            else if((g->name == "SWAP_Gate") && (ii * osz + jj == 0 || ii * osz + jj == 3) && (!isChunk(targ[0])))\
                 continue;\
-            else if(g->name == "CPhase_Gate" && (ii * osz + jj != 3) && (!isChunk(targ[0])))\
+            else if(g->name == "CPhase_Gate" && (ii * osz + jj != 3) && (!isChunk(targ[1])))\
                 continue;\
             if(pread(env.fd_arr[task.fd_using[ii]], &(task.buffer[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
                 ;\
@@ -82,9 +82,9 @@
         for (int jj = 0; jj < osz; jj++) {\
             if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (ii * osz + jj == 0) && (!isChunk(targ[0])))\
                 continue;\
-            else if((g->name == "SWAP_Gate" || g->name == "VSWAP_Gate_1_1") && (ii * osz + jj == 0 || ii * osz + jj == 3) && (!isChunk(targ[0])))\
+            else if((g->name == "SWAP_Gate") && (ii * osz + jj == 0 || ii * osz + jj == 3) && (!isChunk(targ[0])))\
                 continue;\
-            else if(g->name == "CPhase_Gate" && (ii * osz + jj != 3) && (!isChunk(targ[0])))\
+            else if(g->name == "CPhase_Gate" && (ii * osz + jj != 3) && (!isChunk(targ[1])))\
                 continue;\
             if(pwrite(env.fd_arr[task.fd_using[ii]], &(task.buffer[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
                 ;\
@@ -426,7 +426,7 @@ void IO_Runner::all_thread_drive_scheduler(thread_IO_task &task,Gate * &g)
         task.fd_using = {env.fd_arr[fd0],env.fd_arr[fd1]};
         func_loop_size = (env.thread_state == env.chunk_state)? env.thread_size : env.thread_size >> 1;
         task.fd_offset_using = (tid == fd0)? vector<long long>{0,0} : vector<long long>{func_loop_size,func_loop_size};
-        inner_all_thread(task,g,func_loop_size,2,true);
+        inner_all_thread(task,g,func_loop_size,2);
     }
     else if(targ.size() == 2)
     {
@@ -449,7 +449,7 @@ void IO_Runner::all_thread_drive_scheduler(thread_IO_task &task,Gate * &g)
             task.fd_offset_using = m[tid];
             if((shift == 0) && (tid != fd0)) return;
             else if((shift == 1) && (tid != fd0 && tid != fd1)) return;
-            inner_all_thread(task,g,func_loop_size,4,true);
+            inner_all_thread(task,g,func_loop_size,4);
         }
         else if(isMiddle(targ[0]))
         {
@@ -466,12 +466,12 @@ void IO_Runner::all_thread_drive_scheduler(thread_IO_task &task,Gate * &g)
             if(cond1 && !cond2 && tid == fd1) task.fd_offset_using = {base1 + (env.qubit_size[targ[0] - 1]),base2 + (env.qubit_size[targ[0] - 1]),base1 + (env.qubit_size[targ[0] - 1]),base2 + (env.qubit_size[targ[0] - 1])};
             if(!cond1 && tid == fd1) task.fd_offset_using = {base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1),base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1)};
             if(cond1)
-                inner_all_thread(task,g,func_loop_size,4,true);
+                inner_all_thread(task,g,func_loop_size,4);
             else
             {
                 for(long long cur_offset = 0;cur_offset < (env.thread_size >> 1);cur_offset += env.qubit_size[targ[0] + 1])
                 {
-                    inner_all_thread(task,g,env.qubit_size[targ[0]],4,true);
+                    inner_all_thread(task,g,env.qubit_size[targ[0]],4);
                     task.fd_offset_using[0] += env.qubit_size[targ[0]];
                     task.fd_offset_using[1] += env.qubit_size[targ[0]];
                     task.fd_offset_using[2] += env.qubit_size[targ[0]];
@@ -488,7 +488,7 @@ void IO_Runner::all_thread_drive_scheduler(thread_IO_task &task,Gate * &g)
             func_loop_size = (env.thread_state == env.chunk_state)? env.thread_size : env.thread_size >> 1;
             unordered_map<int,vector<long long>>m = {{fd0,{0,0}},{fd1,{func_loop_size,func_loop_size}}};
             task.fd_offset_using = m[tid];
-            inner_all_thread(task,g,func_loop_size,2,true);
+            inner_all_thread(task,g,func_loop_size,2);
         }
     }
 }
@@ -516,7 +516,7 @@ void IO_Runner::all_thread_drive_vs2_2(thread_IO_task &task,Gate * &g)
         task.fd_offset_using = m[tid];
         if((shift == 0) && (tid != fd0)) return;
         else if((shift == 1) && (tid != fd0 && tid != fd1)) return;
-        inner_all_thread(task,g,func_loop_size,4,true);
+        inner_all_thread(task,g,func_loop_size,4);
     }
     else//L L M D
     {
@@ -534,12 +534,12 @@ void IO_Runner::all_thread_drive_vs2_2(thread_IO_task &task,Gate * &g)
         if(cond1 && !cond2 && tid == fd1) task.fd_offset_using = {base1 + (env.qubit_size[targ[2] - 1]),base2 + (env.qubit_size[targ[2] - 1]),base1 + (env.qubit_size[targ[2] - 1]),base2 + (env.qubit_size[targ[2] - 1])};
         if(!cond1 && tid == fd1) task.fd_offset_using = {base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1),base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1)};
         if(cond1)
-            inner_all_thread(task,g,func_loop_size,4,true);
+            inner_all_thread(task,g,func_loop_size,4);
         else
         {
             for(long long cur_offset = 0;cur_offset < (env.thread_size >> 1);cur_offset += env.qubit_size[targ[2] + 1])
             {
-                inner_all_thread(task,g,env.qubit_size[targ[2]],4,true);
+                inner_all_thread(task,g,env.qubit_size[targ[2]],4);
                 task.fd_offset_using[0] += env.qubit_size[targ[2]];
                 task.fd_offset_using[1] += env.qubit_size[targ[2]];
                 task.fd_offset_using[2] += env.qubit_size[targ[2]];
@@ -548,26 +548,24 @@ void IO_Runner::all_thread_drive_vs2_2(thread_IO_task &task,Gate * &g)
         }
     }
 }
-void IO_Runner::inner_all_thread(thread_IO_task &task,Gate * &g,long long func_loop_size,int round,bool exe)
+void IO_Runner::inner_all_thread(thread_IO_task &task,Gate * &g,long long func_loop_size,int round)
 {
     for(long long i = 0;i < func_loop_size;i += env.chunk_size)
     {
         for(int j = 0;j < round;j++)
         {
+            if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (j == 0) && (!isChunk(g->targs[0]))) {cout<<"BBB\n"; continue;}
+            else if((g->name == "SWAP_Gate") && (j == 0 || j == 3) && (!isChunk(g->targs[0]))) continue;
+            else if(g->name == "CPhase_Gate" && (j != 3) && (!isChunk(g->targs[1]))) continue;
             if(pread(task.fd_using[j],&task.buffer[j * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
         }
-        if(exe)
-            g->run(task.buffer);
+        g->run(task.buffer);
         for(int j = 0;j < round;j++)
         {
-            if(exe)
-            {
-                if(pwrite(task.fd_using[j],&task.buffer[j * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
-            }
-            else
-            {
-                if(pwrite(task.fd_using[j],&task.buffer[(round - 1 - j) * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
-            }
+            if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (j == 0) && (!isChunk(g->targs[0]))) continue;
+            else if((g->name == "SWAP_Gate") && (j == 0 || j == 3) && (!isChunk(g->targs[0]))) continue;
+            else if(g->name == "CPhase_Gate" && (j != 3) && (!isChunk(g->targs[1]))) continue;
+            if(pwrite(task.fd_using[j],&task.buffer[j * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
             task.fd_offset_using[j] += env.chunk_size;
         }
     }
