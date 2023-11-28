@@ -15,6 +15,7 @@ public:
     std::vector<int> fd_using;
     std::vector<long long> fd_offset_using;
     std::vector<int>partner_using;
+    std::vector<int>gate_buffer_using;
     // std::vector<std::vector<Gate>> subcircuits;
     thread_MPI_task()=default;
     thread_MPI_task(int);
@@ -25,7 +26,7 @@ class MPI_Runner: public Simulator::circuitRunner {
     void setFD(thread_MPI_task &, Gate * &);
     void setFD_sub(thread_MPI_task &);
     void MPI_Swap(thread_MPI_task &,Gate * &);
-    void _thread_swap(thread_MPI_task &,Gate * &,bool);
+    void _thread_MPI_swap(thread_MPI_task &,Gate * &,bool &);
     void MPI_gate_scheduler(thread_MPI_task &,Gate * &);
     void _thread_read1_recv1(thread_MPI_task &,Gate * &);
     void _thread_read2_recv2(thread_MPI_task &,Gate * &,int,long long);

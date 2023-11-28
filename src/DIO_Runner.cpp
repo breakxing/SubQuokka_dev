@@ -546,7 +546,7 @@ void DIO_Runner::inner_all_thread(thread_DIO_task &task,Gate * &g,long long func
     {
         for(int j = 0;j < round;j++)
         {
-            if((g->name == "Z_Gate_DIO" || g->name == "Phase_Gate_DIO") && (j == 0) && (!isChunk(g->targs[0]))) {cout<<"BBB\n"; continue;}
+            if((g->name == "Z_Gate_DIO" || g->name == "Phase_Gate_DIO") && (j == 0) && (!isChunk(g->targs[0]))) continue;
             else if((g->name == "SWAP_Gate_DIO") && (j == 0 || j == 3) && (!isChunk(g->targs[0]))) continue;
             else if(g->name == "CPhase_Gate_DIO" && (j != 3) && (!isChunk(g->targs[1]))) continue;
             if(pread(task.fd_using[j],&task.buffer[j * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
@@ -554,7 +554,7 @@ void DIO_Runner::inner_all_thread(thread_DIO_task &task,Gate * &g,long long func
         g->run_dio(task.buffer);
         for(int j = 0;j < round;j++)
         {
-            if((g->name == "Z_Gate_DIO" || g->name == "Phase_Gate_DIO") && (j == 0) && (!isChunk(g->targs[0]))) {cout<<"BBB\n"; continue;}
+            if((g->name == "Z_Gate_DIO" || g->name == "Phase_Gate_DIO") && (j == 0) && (!isChunk(g->targs[0]))) continue;
             else if((g->name == "SWAP_Gate_DIO") && (j == 0 || j == 3) && (!isChunk(g->targs[0]))) continue;
             else if(g->name == "CPhase_Gate_DIO" && (j != 3) && (!isChunk(g->targs[1]))) continue;
             if(pwrite(task.fd_using[j],&task.buffer[j * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));

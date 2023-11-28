@@ -554,7 +554,7 @@ void IO_Runner::inner_all_thread(thread_IO_task &task,Gate * &g,long long func_l
     {
         for(int j = 0;j < round;j++)
         {
-            if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (j == 0) && (!isChunk(g->targs[0]))) {cout<<"BBB\n"; continue;}
+            if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (j == 0) && (!isChunk(g->targs[0]))) continue;
             else if((g->name == "SWAP_Gate") && (j == 0 || j == 3) && (!isChunk(g->targs[0]))) continue;
             else if(g->name == "CPhase_Gate" && (j != 3) && (!isChunk(g->targs[1]))) continue;
             if(pread(task.fd_using[j],&task.buffer[j * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
