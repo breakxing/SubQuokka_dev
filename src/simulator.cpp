@@ -332,10 +332,10 @@ Gate *Simulator::setGate_MPI(string &line) {
     ss >> gate_ops;
     if (gate_ops == "U1") {
         return setUnitary<U1_Gate>(ss, ONE_QUBIT);
-    } else if (gate_ops == "U2") {
-        return setUnitary<U2_Gate>(ss, TWO_QUBIT);
-    } else if (gate_ops == "U3") {
-        return setUnitary<U3_Gate>(ss, THREE_QUBIT);
+    // } else if (gate_ops == "U2") {
+    //     return setUnitary<U2_Gate>(ss, TWO_QUBIT);
+    // } else if (gate_ops == "U3") {
+    //     return setUnitary<U3_Gate>(ss, THREE_QUBIT);
     } else if (gate_ops == "H"){
         return setGate_1<H_Gate>(ss);
     // } else if (gate_ops == "S"){
@@ -366,12 +366,12 @@ Gate *Simulator::setGate_MPI(string &line) {
         return setGate_vswap<VSWAP_Gate_1_1>(ss, 1);
     } else if (gate_ops == "VSWAP_2_2") {
         return setGate_vswap<VSWAP_Gate_2_2>(ss, 2);
-    } else if (gate_ops == "VSWAP_3_3") {
-        return setGate_vswap<VSWAP_Gate_3_3>(ss, 3);
-    } else if (gate_ops == "VSWAP_4_4") {
-        return setGate_vswap<VSWAP_Gate_4_4>(ss, 4);
-    } else if (gate_ops == "VSWAP_6_6") {
-        return setGate_vswap<VSWAP_Gate_6_6>(ss, 6);
+    // } else if (gate_ops == "VSWAP_3_3") {
+    //     return setGate_vswap<VSWAP_Gate_3_3>(ss, 3);
+    // } else if (gate_ops == "VSWAP_4_4") {
+    //     return setGate_vswap<VSWAP_Gate_4_4>(ss, 4);
+    // } else if (gate_ops == "VSWAP_6_6") {
+    //     return setGate_vswap<VSWAP_Gate_6_6>(ss, 6);
     } else {
         cerr << "[setGate]: Not implemented yet." << endl;
         exit(1);

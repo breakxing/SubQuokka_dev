@@ -29,14 +29,19 @@ class MPI_Runner: public Simulator::circuitRunner {
     void _thread_MPI_swap(thread_MPI_task &,Gate * &,bool &);
     void MPI_gate_scheduler(thread_MPI_task &,Gate * &);
     void _thread_read1_recv1(thread_MPI_task &,Gate * &);
-    void _thread_read2_recv2(thread_MPI_task &,Gate * &,int,long long);
-    void _thread_read1_recv3(thread_MPI_task &,Gate * &,int);
+    // void _thread_read2_recv2(thread_MPI_task &,Gate * &,int,long long);
+    // void _thread_read1_recv3(thread_MPI_task &,Gate * &,int);
     void _thread_no_exec_MPI(thread_MPI_task &,int round);
     int Get_Next_Undone_Buffer_index(vector<MPI_Request> &,vector<bool>&,int ,int);
     void update_offset(thread_MPI_task &,long long&);
     void inner_all_thread(thread_MPI_task &,Gate * &,long long,int);
     void all_thread_drive_scheduler(thread_MPI_task &,Gate * &);
     void all_thread_drive_vs2_2(thread_MPI_task &,Gate * &);
+
+    bool skip_read_write(Gate * &,const int &);
+    void MPI_one_qubit_gate_diagonal(thread_MPI_task &,Gate * &);
+    void MPI_two_qubit_gate_diagonal(thread_MPI_task &,Gate * &);
+    void MPI_special_gate_inner(thread_MPI_task &,Gate * &,long long,int);
 
 public:
     MPI_Runner();
