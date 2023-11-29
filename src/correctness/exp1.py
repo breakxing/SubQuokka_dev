@@ -11,10 +11,13 @@ ini_path = "res.ini"
 state_paths = [f"/mnt/state{i % 4}/path{i}" for i in range(1 << file_seg)]
 state_paths = ",".join(state_paths)
 
-cir_path = "./MPI_circuit/ori/24/qft24.txt"
+cir_path = "./MPI_circuit/ori/27/qft27.txt"
+
 cir = get_circuit()
-N = 24
+N = 27
 mpiqubit = 1
+# for _ in range(100):
+#     H(cir,12)
 # for i in range(N):
 #     H(cir,i)
 # CPhase(cir,5,N - 1,math.pi)
@@ -39,6 +42,7 @@ for n in [N]:
         os.system("scp -r -P 9048 ./*.cpp rdma2:~/SubQuokka_dev/src/")
         os.system("scp -r -P 9048 ./*.hpp rdma2:~/SubQuokka_dev/src/")
         os.system("scp -r -P 9048 ./*.h rdma2:~/SubQuokka_dev/src/")
+        os.system("scp -r -P 9048 ./makefile rdma2:~/SubQuokka_dev/src/")
         os.system(f"scp -r -P 9048 ./correctness/{ini_path} rdma2:~/SubQuokka_dev/src/correctness/")
         # os.system(f"scp -r -P 9048 ./correctness/{cir_path} rdma2:~/SubQuokka_dev/src/correctness/")
         input("Go other computer to make")
