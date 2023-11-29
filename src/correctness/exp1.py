@@ -11,14 +11,14 @@ ini_path = "res.ini"
 state_paths = [f"/mnt/state{i % 4}/path{i}" for i in range(1 << file_seg)]
 state_paths = ",".join(state_paths)
 
-cir_path = "cir.txt"
+cir_path = "./MPI_circuit/ori/24/qft24.txt"
 cir = get_circuit()
-N = 31
-mpiqubit = 0
-for i in range(500000):
-    H(cir,12)
-    
-create_circuit(cir, cir_path)
+N = 24
+mpiqubit = 1
+# for i in range(N):
+#     H(cir,i)
+# CPhase(cir,5,N - 1,math.pi)
+# create_circuit(cir, cir_path)
 # exit(0)
 os.chdir("..")
 # os.system("make clean")
@@ -36,19 +36,19 @@ for n in [N]:
         # simple_test(f"[H {n} subcircuit]", False, cir_path, state_paths, n, (1 << file_seg))
     else:
         os.chdir("..")
-        # os.system("scp -r -P 9048 ./*.cpp rdma2:~/SubQuokka_dev/src/")
-        # os.system("scp -r -P 9048 ./*.hpp rdma2:~/SubQuokka_dev/src/")
-        # os.system("scp -r -P 9048 ./*.h rdma2:~/SubQuokka_dev/src/")
+        os.system("scp -r -P 9048 ./*.cpp rdma2:~/SubQuokka_dev/src/")
+        os.system("scp -r -P 9048 ./*.hpp rdma2:~/SubQuokka_dev/src/")
+        os.system("scp -r -P 9048 ./*.h rdma2:~/SubQuokka_dev/src/")
         os.system(f"scp -r -P 9048 ./correctness/{ini_path} rdma2:~/SubQuokka_dev/src/correctness/")
-        os.system(f"scp -r -P 9048 ./correctness/{cir_path} rdma2:~/SubQuokka_dev/src/correctness/")
-        # input("Go other computer to make")
+        # os.system(f"scp -r -P 9048 ./correctness/{cir_path} rdma2:~/SubQuokka_dev/src/correctness/")
+        input("Go other computer to make")
         os.chdir("correctness")
         os.system(f"mpirun -x LD_LIBRARY_PATH --bind-to none --hostfile ../hf --map-by ppr:1:node \"$(pwd)/../Quokka\" -i {ini_path} -c {cir_path}")
-        # os.system(f"mpirun -np {1 << mpiqubit} --bind-to none ../Quokka -i {ini_path} -c {cir_path}")
+        # os.system(f"mpirun -np {1 << mpiqubit} --bind-to none ../Quokka -i {ini_path} -c ../../subcircuitFinder/abc.txt")
         # for i in range(8,16):
         #     os.system(f"cp ./state1/path{i - 8} ./state0/path{i}")
-            # os.system(f"cp ./state2/path{i - 8} ./state0/path{i + 8}")
-            # os.system(f"cp ./state3/path{i - 8} ./state0/path{i + 16}")
+        #     os.system(f"cp ./state2/path{i - 8} ./state0/path{i + 8}")
+        #     os.system(f"cp ./state3/path{i - 8} ./state0/path{i + 16}")
         # state_path_compare = [f"./state0/path{i}" for i in range((1 << file_seg) * (1 << args.mpi_qbit))]
         # state_path_compare = ",".join(state_path_compare)
         # simple_test(f"[H {n} subcircuit]", False, cir_path, state_path_compare, n, (1 << file_seg) * (1 << args.mpi_qbit))

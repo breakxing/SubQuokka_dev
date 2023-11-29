@@ -324,26 +324,24 @@ void MPI_Runner::run(vector<Gate *> &circuit) {
                     all_thread_drive_scheduler(task,g);
                 else
                 {
-                    if (file_count > 0 && skipThread(tid, targ)) 
+                    if (!(file_count > 0 && skipThread(tid, targ))) 
                     {
-                        #pragma omp barrier
-                        continue;
-                    }
-                    setFD(task, g);
-                    switch(middle_count){
-                        case 0:
-                            outer_loop_m0(innerloop)
-                            break;
+                        setFD(task, g);
+                        switch(middle_count){
+                            case 0:
+                                outer_loop_m0(innerloop)
+                                break;
 
-                        case 1:
-                            outer_loop_m1(innerloop, targ[chunk_count])
-                            break;
+                            case 1:
+                                outer_loop_m1(innerloop, targ[chunk_count])
+                                break;
 
-                        case 2:
-                            outer_loop_m2(innerloop, targ[chunk_count], targ[chunk_count+1])
-                            break;
-                        default:
-                            exit(-1);
+                            case 2:
+                                outer_loop_m2(innerloop, targ[chunk_count], targ[chunk_count+1])
+                                break;
+                            default:
+                                exit(-1);
+                        }
                     }
                 }
             }
@@ -357,7 +355,11 @@ void MPI_Runner::run(vector<Gate *> &circuit) {
             else
                 exit(-1);
             #pragma omp barrier
+            #pragma omp master
+            MPI_Barrier(MPI_COMM_WORLD);
+            #pragma omp barrier
         }
+    #pragma omp barrier
     #pragma omp master
     MPI_Barrier(MPI_COMM_WORLD);
     #pragma omp barrier
@@ -435,7 +437,11 @@ void MPI_Runner::run(vector<vector<Gate *>> &subcircuits) {
                 }
             }
             #pragma omp barrier
+            #pragma omp master
+            MPI_Barrier(MPI_COMM_WORLD);
+            #pragma omp barrier
         }
+        #pragma omp barrier
         #pragma omp master
         MPI_Barrier(MPI_COMM_WORLD);
         #pragma omp barrier
@@ -585,13 +591,16 @@ void MPI_Runner::all_thread_drive_vs2_2(thread_MPI_task &task,Gate * &g)
 }
 void MPI_Runner::inner_all_thread(thread_MPI_task &task,Gate * &g,long long func_loop_size,int round)
 {
-    for(long long i = 0;i < func_loop_size;i += env.chunk_size)
+    long long stride = env.chunk_size;
+    if(g->name == "CPhase_Gate" && isMpi(g->targs[1]) && isFile(g->targs[0]))
+        stride = env.chunk_size << 1;
+    for(long long i = 0;i < func_loop_size;i += stride)
     {
         for(int j = 0;j < round;j++)
         {
             if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (j == 0) && (!isChunk(g->targs[0]) && (!isMpi(g->targs[0])))) continue;
             else if((g->name == "SWAP_Gate") && (j == 0 || j == 3) && (!isChunk(g->targs[0]))) continue;
-            else if(g->name == "CPhase_Gate" && (j != 3) && (!isChunk(g->targs[1]) && (!isMpi(g->targs[0])))) continue;
+            else if(g->name == "CPhase_Gate" && (j != 3) && (!isChunk(g->targs[1]) && (!isMpi(g->targs[1])))) continue;
             if(pread(task.fd_using[j],&task.buffer[task.gate_buffer_using[j] * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
         }
         g->run(task.buffer);
@@ -599,9 +608,9 @@ void MPI_Runner::inner_all_thread(thread_MPI_task &task,Gate * &g,long long func
         {
             if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (j == 0) && (!isChunk(g->targs[0])) && (!isMpi(g->targs[0]))) continue;
             else if((g->name == "SWAP_Gate") && (j == 0 || j == 3) && (!isChunk(g->targs[0]))) continue;
-            else if(g->name == "CPhase_Gate" && (j != 3) && (!isChunk(g->targs[1]) && (!isMpi(g->targs[0])))) continue;
+            else if(g->name == "CPhase_Gate" && (j != 3) && (!isChunk(g->targs[1]) && (!isMpi(g->targs[1])))) continue;
             if(pwrite(task.fd_using[j],&task.buffer[task.gate_buffer_using[j] * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
-            task.fd_offset_using[j] += env.chunk_size;
+            task.fd_offset_using[j] += stride;
         }
     }
 }
@@ -731,15 +740,15 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
             rank1 = rank0 | mpi_targ_mask_2;
             rank2 = rank0 | mpi_targ_mask_0;
             rank3 = rank0 | mpi_targ_mask_0 | mpi_targ_mask_2;
-            // if(g->name == "CPhase_Gate")
-            // {
-            //     if(env.rank != rank3) return;
-            //     task.fd_using = {env.fd_arr[task.tid]};
-            //     task.fd_offset_using = {0};
-            //     task.gate_buffer_using = {3};
-            //     inner_all_thread(task,g,env.thread_size,1);
-            //     return;
-            // }
+            if(g->name == "CPhase_Gate")
+            {
+                if(env.rank != rank3) return;
+                task.fd_using = {env.fd_arr[task.tid]};
+                task.fd_offset_using = {0};
+                task.gate_buffer_using = {3};
+                inner_all_thread(task,g,env.thread_size,1);
+                return;
+            }
             task.partner_using = {rank0,rank1,rank2,rank3};
             task.fd_using = {env.fd_arr[task.tid],env.fd_arr[task.tid],env.fd_arr[task.tid],env.fd_arr[task.tid]};
             task.fd_offset_using = {0,env.chunk_size,env.chunk_size << 1,env.chunk_size * 3};
@@ -763,6 +772,18 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
             long long file_mask = 1 << (g->targs[0] - seg.middle - seg.chunk);
             rank0 = env.rank ^ mpi_targ_mask_0;
             rank1 = env.rank ^ mpi_targ_mask_0;
+            if(g->name == "CPhase_Gate")
+            {
+                if(env.rank < rank1) return;
+                int fd1 = task.tid | file_mask;
+                bool thread_equal_chunk = (env.thread_size == env.chunk_size);
+                if(thread_equal_chunk && task.tid == fd1) return;
+                task.fd_using = {env.fd_arr[fd1]};
+                task.fd_offset_using = (task.tid != fd1)? vector<long long> {0} : vector<long long> {env.chunk_size};
+                task.gate_buffer_using = {3};
+                inner_all_thread(task,g,env.thread_size,1);
+                return;
+            }
             task.partner_using = {rank0,rank1};
             task.fd_using = {env.fd_arr[task.tid & (~file_mask)],env.fd_arr[task.tid | file_mask]};
             task.fd_offset_using = {0,0};
@@ -786,6 +807,18 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
         {
             rank0 = env.rank ^ mpi_targ_mask_0;
             rank1 = env.rank ^ mpi_targ_mask_0;
+            if(g->name == "CPhase_Gate")
+            {
+                if(env.rank < rank1) return;
+                task.fd_using = {env.fd_arr[task.tid]};
+                task.gate_buffer_using = {3};
+                for(long long cur_offset = 0;cur_offset < env.thread_size;cur_offset += env.qubit_size[g->targs[0] + 1])
+                {
+                    task.fd_offset_using = {cur_offset + env.qubit_size[g->targs[0]]};
+                    inner_all_thread(task,g,env.qubit_size[g->targs[0]],1);
+                }
+                return;
+            }
             task.partner_using = {rank0,rank1};
             task.fd_using = {env.fd_arr[task.tid],env.fd_arr[task.tid]};
             loop_bound = (env.thread_state == env.qubit_offset[g->targs[0] + 1])? env.qubit_size[g->targs[0]] : env.thread_size;
@@ -825,6 +858,15 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
         else
         {
             rank0 = env.rank ^ mpi_targ_mask_0;
+            if(g->name == "CPhase_Gate")
+            {
+                if(env.rank < rank0) return;
+                task.fd_using = {env.fd_arr[task.tid]};
+                task.fd_offset_using = {0};
+                task.gate_buffer_using = {1};
+                inner_all_thread(task,g,env.thread_size,1);
+                return;
+            }
             task.partner_using = {rank0};
             task.fd_using = {env.fd_arr[task.tid]};
             task.fd_offset_using = {0};

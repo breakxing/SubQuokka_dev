@@ -13,7 +13,9 @@ gate_list = ["H U1 X Y Z P RX RY RZ", "RZZ, SWAP, CPhase"]
 # One qubit gate
 # N = 3
 # H U1 X Y Z P RX RY RZ
-n = 10
+n1 = 6
+n2 = 8
+n = n1
 ini_path = "res.ini"
 cir_path = "cir.txt"
 
@@ -222,7 +224,7 @@ print("==================================================")
 # N = 6
 # RZZ SWAP CPhase
 
-n = 10
+n = n2
 ini_path = "res.ini"
 cir_path = "cir.txt"
 state_paths = "./state/path0,./state/path1,./state/path2,./state/path3"
