@@ -4,13 +4,13 @@
 [Circuit File]: MPI_circuit/ori/24/qft24.txt
 MPI Mode
 MPI Mode
-[1700865938.351999] [paslab42:32837:0]     ucp_context.c:1177 UCX  WARN  network device 'enp2s0' is not available, please use one or more of: 'eno1'(tcp), 'enp225s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
-[1700865938.448706] [paslab48:28540:0]     ucp_context.c:1177 UCX  WARN  network device 'eno1' is not available, please use one or more of: 'enp225s0f0np0'(tcp), 'enp2s0'(tcp), 'lo'(tcp), 'mlx5_0:1'(ib)
-[1700865938.501465] [paslab42:32837:0]     ucp_context.c:1177 UCX  WARN  network device 'enp2s0' is not available, please use one or more of: 'eno1'(tcp), 'enp225s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
-[1700865938.508293] [paslab48:28540:0]     ucp_context.c:1177 UCX  WARN  network device 'eno1' is not available, please use one or more of: 'enp225s0f0np0'(tcp), 'enp2s0'(tcp), 'lo'(tcp), 'mlx5_0:1'(ib)
-[1700865938.533689] [paslab42:32837:0]     ucp_context.c:1177 UCX  WARN  network device 'enp2s0' is not available, please use one or more of: 'eno1'(tcp), 'enp225s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
-[1700865938.552559] [paslab48:28540:0]     ucp_context.c:1177 UCX  WARN  network device 'eno1' is not available, please use one or more of: 'enp225s0f0np0'(tcp), 'enp2s0'(tcp), 'lo'(tcp), 'mlx5_0:1'(ib)
-38.6381s
-38.6467s
+[1701301127.759667] [paslab42:453045:0]     ucp_context.c:1177 UCX  WARN  network device 'enp2s0' is not available, please use one or more of: 'eno1'(tcp), 'enp225s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
+[1701301127.844444] [paslab48:109409:0]     ucp_context.c:1177 UCX  WARN  network device 'eno1' is not available, please use one or more of: 'enp225s0f0np0'(tcp), 'enp2s0'(tcp), 'lo'(tcp), 'mlx5_0:1'(ib)
+[1701301127.901359] [paslab48:109409:0]     ucp_context.c:1177 UCX  WARN  network device 'eno1' is not available, please use one or more of: 'enp225s0f0np0'(tcp), 'enp2s0'(tcp), 'lo'(tcp), 'mlx5_0:1'(ib)
+[1701301127.882582] [paslab42:453045:0]     ucp_context.c:1177 UCX  WARN  network device 'enp2s0' is not available, please use one or more of: 'eno1'(tcp), 'enp225s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
+[1701301127.910735] [paslab42:453045:0]     ucp_context.c:1177 UCX  WARN  network device 'enp2s0' is not available, please use one or more of: 'eno1'(tcp), 'enp225s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
+[1701301127.943669] [paslab48:109409:0]     ucp_context.c:1177 UCX  WARN  network device 'eno1' is not available, please use one or more of: 'enp225s0f0np0'(tcp), 'enp2s0'(tcp), 'lo'(tcp), 'mlx5_0:1'(ib)
+4.07589s
+4.07657s
 Rank0 MPI_Finalize Success
 Rank1 MPI_Finalize Success
