@@ -1,9 +1,0 @@
-------------------------------------------------------------
-A process or daemon was unable to complete a TCP connection
-to another process:
-  Local host:    paslab48
-  Remote host:   paslab42
-This is usually caused by a firewall on the remote host. Please
-check that any firewall (e.g., iptables) has been disabled and
-try again.
-------------------------------------------------------------

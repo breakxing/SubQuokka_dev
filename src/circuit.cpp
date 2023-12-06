@@ -5,6 +5,7 @@
 #include <functional>
 #include "simulator.hpp"
 #include "circuit.hpp"
+#include <cassert>
 
 using namespace std;
 using namespace placeholders;
@@ -407,17 +408,15 @@ TWO_QUBIT_GATE::TWO_QUBIT_GATE(vector<int> targ): Gate(targ) {
 
 U2_Gate::U2_Gate(vector<int> targ, vector<complex<double>> matrix): TWO_QUBIT_GATE(targ){
     name = "U2_Gate";
-
-    if (targ[0] > targ[1]){
-        for (int i = 0; i < 16; i++) {
-            int res = 0;
-            int b1 = i & 1;
-            int b2 = (i >> 1) & 1;
-            int b3 = (i >> 2) & 1;
-            int b4 = (i >> 3) & 1;
-            res = (b3 << 3) | (b4 << 2) | (b1 << 1) | b2;
-            coeff[i] = matrix[res];
-        }
+    assert(targ[0] < targ[1]);
+    for (int i = 0; i < 16; i++) {
+        int res = 0;
+        int b1 = i & 1;
+        int b2 = (i >> 1) & 1;
+        int b3 = (i >> 2) & 1;
+        int b4 = (i >> 3) & 1;
+        res = (b3 << 3) | (b4 << 2) | (b1 << 1) | b2;
+        coeff[i] = matrix[res];
     }
 
     bind_gate_2(U2_Gate)

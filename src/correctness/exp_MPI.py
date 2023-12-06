@@ -24,34 +24,34 @@ file_seg = 5
 chunk_seg = 12
 
 
-# protocols = ["IO"]
-# versions = ["ori"]
-# qubits = ["21","24","27","30"]
-# files = ["qft"]
-# for protocol in protocols:
-#     for version in versions:
-#         for qubit in qubits:
-#             N = int(qubit)
-#             ini_path = os.path.join("MPI_circuit",version,qubit,"myini.ini")
-#             state_paths = [f"/mnt/state{i % 4}/path{i}" for i in range(1 << file_seg)]
-#             state_paths = ",".join(state_paths)
-#             args = Args(total_qbit=N, file_qbit=file_seg, chunk_qbit=chunk_seg,mpi_qbit=0,
-#                 is_subcircuit = 1 if version == "sub" else 0,
-#                 runner_type="IO", state_paths=state_paths)
-#             ini = Ini(args, ini_path)
-#             ini.out()
-#             for file in files:
-#                 print(protocol,version,file + qubit,"Start")
-#                 cir_path = os.path.join("circuit_io",version,qubit,file + qubit + ".txt")
-#                 log_path = os.path.join("MPI_circuit",version,qubit,file + qubit + f".{protocol}.log")
-#                 os.system(f"../Quokka -c {cir_path} -i {ini_path} > {log_path}")
-#             print(f"{protocol}",version,file + qubit,"End")
-
-
-protocols = ["RDMA","RDMA_TCP","Pure_TCP"]
+protocols = ["IO"]
 versions = ["ori"]
-qubits = ["21","24","27","30"]
-files = ["qft"]
+qubits = ["29"]
+files = ["h","qft","qaoa"]
+for protocol in protocols:
+    for version in versions:
+        for qubit in qubits:
+            N = int(qubit)
+            ini_path = os.path.join("MPI_circuit",version,qubit,"myini.ini")
+            state_paths = [f"/mnt/state{i % 4}/path{i}" for i in range(1 << file_seg)]
+            state_paths = ",".join(state_paths)
+            args = Args(total_qbit=N, file_qbit=file_seg, chunk_qbit=chunk_seg,mpi_qbit=0,
+                is_subcircuit = 1 if version == "sub" else 0,
+                runner_type="IO", state_paths=state_paths)
+            ini = Ini(args, ini_path)
+            ini.out()
+            for file in files:
+                print(protocol,version,file + qubit,"Start")
+                cir_path = os.path.join("circuit_io",version,qubit,file + qubit + ".txt")
+                log_path = os.path.join("MPI_circuit",version,qubit,file + qubit + f".{protocol}.log")
+                os.system(f"../Quokka -c {cir_path} -i {ini_path} > {log_path}")
+            print(f"{protocol}",version,file + qubit,"End")
+
+
+protocols = ["RDMA"]
+versions = ["ori"]
+qubits = ["29"]
+files = ["h","qft","qaoa"]
 for protocol in protocols:
     for version in versions:
         for qubit in qubits:

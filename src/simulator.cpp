@@ -332,8 +332,8 @@ Gate *Simulator::setGate_MPI(string &line) {
     ss >> gate_ops;
     if (gate_ops == "U1") {
         return setUnitary<U1_Gate>(ss, ONE_QUBIT);
-    // } else if (gate_ops == "U2") {
-    //     return setUnitary<U2_Gate>(ss, TWO_QUBIT);
+    } else if (gate_ops == "U2") {
+        return setUnitary<U2_Gate>(ss, TWO_QUBIT);
     // } else if (gate_ops == "U3") {
     //     return setUnitary<U3_Gate>(ss, THREE_QUBIT);
     } else if (gate_ops == "H"){

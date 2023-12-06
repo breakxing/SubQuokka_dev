@@ -118,9 +118,9 @@ inline int findCorrespond(int tid, int targ) {
     return tid + targMask;
 }
 
-thread_MPI_task::thread_MPI_task(int tid) {
-    request_size = 16;
-    request.resize(request_size);
+thread_MPI_task::thread_MPI_task(int tid,int MPI_buffer_size) {
+
+    request.resize(MPI_buffer_size);
     for (int i = 0; i < seg.chunk; i++) {
         fd_table.push_back(tid);
         fd_offset_table.push_back(0);
@@ -143,6 +143,7 @@ thread_MPI_task::thread_MPI_task(int tid) {
 
 MPI_Runner::MPI_Runner() {
     int provided;
+    MPI_buffer_size = 16;
     if(MPI_Init_thread(NULL, NULL,MPI_THREAD_MULTIPLE,&provided)!=MPI_SUCCESS) exit(-1);
     if(provided < MPI_THREAD_MULTIPLE)
     {
@@ -154,8 +155,8 @@ MPI_Runner::MPI_Runner() {
         exit(-1);
     }
     for (int i = 0; i < env.num_thread; i++) {
-        thread_tasks.push_back(thread_MPI_task(i));
-        thread_tasks[i].buffer.resize(16 * env.chunk_state);
+        thread_tasks.push_back(thread_MPI_task(i,MPI_buffer_size));
+        thread_tasks[i].buffer.resize(MPI_buffer_size * env.chunk_state);
     }
 }
 void MPI_Runner::setFD(thread_MPI_task &task, Gate *&gate) {
