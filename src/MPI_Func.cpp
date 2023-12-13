@@ -1,6 +1,6 @@
 #include <omp.h>
 #include <unistd.h> //pread, pwrite
-
+#include <utility>
 #include <complex>
 #include <fstream>
 #include <functional>
@@ -314,11 +314,157 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
         }
         else
         {
+            //Algo 1
+            // for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+            // {
+            //     _thread_read1_recv1(task,g);
+            //     update_offset(task,loop_stride);
+            // }
+            // loop_stride = env.chunk_size;
+            // int partner_rank = task.partner_using[0];
+            // int member_th = env.rank > partner_rank;
+            // for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+            // {
+            //     if(pread(task.fd_using[0],&task.buffer[0],env.chunk_size,task.fd_offset_using[0]));
+            //     MPI_Sendrecv(&task.buffer[0],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,&task.buffer2[0],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            //     vector<complex<double>> *buffer1 = &task.buffer;
+            //     vector<complex<double>> *buffer2 = &task.buffer2;
+            //     if(member_th) swap(buffer1,buffer2);
+            //     H_exp2(buffer1,buffer2,0,0);
+            //     if(pwrite(task.fd_using[0],&task.buffer[0],env.chunk_size,task.fd_offset_using[0]));
+            //     update_offset(task,loop_stride);
+            // }
+            //Algo 5
+            loop_stride = env.chunk_size * min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+            int partner_rank = task.partner_using[0];
+            int member_th = env.rank > partner_rank;
+            int one_round_chunk = min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+            int half_round_chunk = one_round_chunk >> 1;
             for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
             {
-                _thread_read1_recv1(task,g);
+                if(pread(task.fd_using[0],&task.buffer[0],one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
+                MPI_Sendrecv(&task.buffer[(!member_th) * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,&task.buffer2[member_th * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                vector<complex<double>> *buffer1 = &task.buffer;
+                vector<complex<double>> *buffer2 = &task.buffer2;
+                if(member_th) swap(buffer1,buffer2);
+                H_exp2(buffer1,buffer2,member_th * half_round_chunk,member_th * half_round_chunk,half_round_chunk);
+                MPI_Sendrecv(&task.buffer2[member_th * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,&task.buffer[(!member_th) * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                if(pwrite(task.fd_using[0],&task.buffer[0],one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
                 update_offset(task,loop_stride);
             }
+            //Algo 4
+            // loop_stride = env.chunk_size;
+            // int partner_rank = task.partner_using[0];
+            // int member_th = env.rank > partner_rank;
+            // for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+            // {
+            //     if(pread(task.fd_using[0],&task.buffer[member_th * env.chunk_state],env.chunk_size,task.fd_offset_using[0]));
+            //     MPI_Sendrecv(&task.buffer[member_th * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,&task.buffer[!member_th * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            //     H_exp(task.buffer,0,1);
+            //     if(pwrite(task.fd_using[0],&task.buffer[member_th * env.chunk_state],env.chunk_size,task.fd_offset_using[0]));
+            //     update_offset(task,env.chunk_size);
+            // }
+            // loop_stride = env.chunk_size;
+            // int partner_rank = task.partner_using[0];
+            // int member_th = env.rank > partner_rank;
+            // int one_round_chunk = MPI_buffer_size;
+            // for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += one_round_chunk * loop_stride)
+            // {
+            //     if(pread(task.fd_using[0],&task.buffer[0],one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
+            //     MPI_Sendrecv(&task.buffer[0],one_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,&task.buffer2[0],one_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            //     vector<complex<double>> *buffer1 = &task.buffer;
+            //     vector<complex<double>> *buffer2 = &task.buffer2;
+            //     if(member_th) swap(buffer1,buffer2);
+            //     H_exp2(buffer1,buffer2,0,0);
+            //     if(pwrite(task.fd_using[0],&task.buffer[0],one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
+            //     task.fd_offset_using[0] += env.chunk_size * one_round_chunk;
+            // }
+            //Algo 3
+            // loop_stride = env.chunk_size << 2;
+            // int partner_rank = task.partner_using[0];
+            // int member_th = env.rank > partner_rank;
+            // int flag;
+            // for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+            // {
+            //     MPI_Irecv(&task.buffer[(!member_th) * env.chunk_state], env.chunk_state, MPI_DOUBLE_COMPLEX, partner_rank,task.tid, MPI_COMM_WORLD,&task.request[!member_th]);//C1
+            //     MPI_Irecv(&task.buffer[(!member_th + 2) * env.chunk_state], env.chunk_state, MPI_DOUBLE_COMPLEX, partner_rank,task.tid, MPI_COMM_WORLD,&task.request[!member_th + 2]);//C3
+
+            //     if(pread(task.fd_using[0],&task.buffer[env.chunk_state << 2],env.chunk_size,task.fd_offset_using[0] + (!member_th) * env.chunk_size));//C2
+            //     MPI_Isend(&task.buffer[env.chunk_state << 2],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request[4]);
+            //     if(pread(task.fd_using[0],&task.buffer[(env.chunk_state << 2) + 1],env.chunk_size,task.fd_offset_using[0] + (!member_th) * env.chunk_size + (env.chunk_size << 1)));//C4
+            //     MPI_Isend(&task.buffer[(env.chunk_state << 2) + 1],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request[5]);
+
+            //     if(pread(task.fd_using[0],&task.buffer[member_th * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + member_th * env.chunk_size));//C1
+            //     if(pread(task.fd_using[0],&task.buffer[(member_th + 2) * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + (member_th + 2) * env.chunk_size));//C3
+            //     flag = 0;
+            //     while(!flag) MPI_Test(&task.request[!member_th],&flag,MPI_STATUS_IGNORE);
+            //     // MPI_Wait(&task.request[!member_th],MPI_STATUS_IGNORE);
+
+            //     H_exp(task.buffer,0,1);
+
+            //     MPI_Isend(&task.buffer[(!member_th) * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request[!member_th]);
+
+            //     flag = 0;
+            //     while(!flag) MPI_Test(&task.request[!member_th + 2],&flag,MPI_STATUS_IGNORE);
+            //     // MPI_Wait(&task.request[!member_th + 2],MPI_STATUS_IGNORE);
+
+            //     H_exp(task.buffer,2,3);
+
+            //     MPI_Isend(&task.buffer[(!member_th + 2) * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request[!member_th + 2]);
+
+            //     MPI_Irecv(&task.buffer[env.chunk_state << 2], env.chunk_state, MPI_DOUBLE_COMPLEX, partner_rank,task.tid, MPI_COMM_WORLD,&task.request[4]);//C2
+            //     MPI_Irecv(&task.buffer[(env.chunk_state << 2) + 1], env.chunk_state, MPI_DOUBLE_COMPLEX, partner_rank,task.tid, MPI_COMM_WORLD,&task.request[5]);//C4
+
+            //     if(pwrite(task.fd_using[0],&task.buffer[member_th * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + member_th * env.chunk_size));//C1
+            //     if(pwrite(task.fd_using[0],&task.buffer[(member_th + 2) * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + (member_th + 2) * env.chunk_size));//C3
+
+            //     flag = 0;
+            //     while(!flag) MPI_Test(&task.request[4],&flag,MPI_STATUS_IGNORE);
+            //     // MPI_Wait(&task.request[4],MPI_STATUS_IGNORE);
+            //     if(pwrite(task.fd_using[0],&task.buffer[env.chunk_state << 2],env.chunk_size,task.fd_offset_using[0] + (!member_th) * env.chunk_size));//C2
+            //     flag = 0;
+            //     while(!flag) MPI_Test(&task.request[5],&flag,MPI_STATUS_IGNORE);
+            //     // MPI_Wait(&task.request[5],MPI_STATUS_IGNORE);
+            //     if(pwrite(task.fd_using[0],&task.buffer[(env.chunk_state << 2) + 1],env.chunk_size,task.fd_offset_using[0] + (!member_th) * env.chunk_size + (env.chunk_size << 1)));//C4
+            //     update_offset(task,loop_stride);
+            // }
+            // Algo 2
+            // long long total_transfer_chunk = env.thread_state / env.chunk_state;
+            // long long times_to_transfer = total_transfer_chunk / (MPI_buffer_size >> 1);
+            // times_to_transfer = max(1LL,times_to_transfer);
+            // if(times_to_transfer == 1)
+            //     loop_bound = env.thread_size;
+            // else
+            //     loop_bound = (MPI_buffer_size >> 1) * env.chunk_size;
+            // loop_stride = env.chunk_size;
+            // int partner_rank = task.partner_using[0];
+            // int member_th = env.rank > partner_rank;
+            // for(long long time = 0;time < times_to_transfer;time++)
+            // {
+            //     for(long long cur = 0;cur < loop_bound;cur += loop_stride)
+            //     {
+            //         long long idx = cur / loop_stride;
+            //         MPI_Irecv(&task.buffer[(idx * 2 + (!member_th)) * env.chunk_state], env.chunk_state, MPI_DOUBLE_COMPLEX, partner_rank,task.tid, MPI_COMM_WORLD,&task.request[(idx * 2 + (!member_th))]);
+            //     }
+            //     for(long long cur = 0;cur < loop_bound;cur += loop_stride)
+            //     {
+            //         long long idx = cur / loop_stride;
+            //         if(pread(task.fd_using[0],&task.buffer[(idx * 2 + member_th) * env.chunk_state],env.chunk_size,cur + time * loop_bound));
+            //         MPI_Isend(&task.buffer[(idx * 2 + member_th) * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request[idx * 2 + member_th]);
+            //     }
+            //     for(long long cur = 0;cur < loop_bound;cur += loop_stride)
+            //     {
+            //         long long idx = cur / loop_stride;
+            //         int flag = 0;
+            //         while(!flag)
+            //         {
+            //             MPI_Testall(2,&task.request[idx * 2],&flag,MPI_STATUSES_IGNORE);
+            //         }
+            //         H_exp(task.buffer,idx * 2,idx * 2 + 1);
+            //         if(pwrite(task.fd_using[0],&task.buffer[(idx * 2 + member_th) * env.chunk_state],env.chunk_size,cur + time * loop_bound));
+            //     }
+            // }
+
         }
     }
     else
@@ -429,6 +575,33 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
                 }
             }
         }
+    }
+}
+void MPI_Runner::H_exp(vector<complex<double>>&buffer,int off0,int off1)
+{
+    off0 = off0 * env.chunk_state;
+    off1 = off1 * env.chunk_state;
+    complex<double> q0; complex<double> q1;
+    for (int i = 0; i < env.chunk_state; i ++)
+    {
+        q0 = buffer[off0]; q1 = buffer[off1];
+        buffer[off0] = 0.70710678118 * (q0 + q1);
+        buffer[off1] = 0.70710678118 * (q0 - q1);
+        off0 += 1; off1 += 1;
+    }
+}
+void MPI_Runner::H_exp2(vector<complex<double>>*buffer,vector<complex<double>>*buffer2,int off0,int off1,int round)
+{
+    off0 *= env.chunk_state;
+    off1 *= env.chunk_state;
+    complex<double> q0; complex<double> q1;
+    for (int i = 0; i < round * env.chunk_state; i ++)
+    {
+        q0 = (*buffer)[off0]; q1 = (*buffer2)[off1];
+        // q0 = buffer[off0]; q1 = buffer2[off1];
+        (*buffer)[off0] = 0.70710678118 * (q0 + q1);
+        (*buffer2)[off1] = 0.70710678118 * (q0 - q1);
+        off0 += 1; off1 += 1;
     }
 }
 void MPI_Runner::_thread_read1_recv1(thread_MPI_task &task,Gate * &g)

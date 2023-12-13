@@ -35,6 +35,7 @@ struct ENV{
     int is_directIO;
     int is_MPI;
     int MPI_testing;
+    int MPI_buffer_size;
     std::string dumpfile;
     // int SetOfSaveState;
 };

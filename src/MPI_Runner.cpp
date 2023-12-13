@@ -143,7 +143,7 @@ thread_MPI_task::thread_MPI_task(int tid,int MPI_buffer_size) {
 
 MPI_Runner::MPI_Runner() {
     int provided;
-    MPI_buffer_size = 16;
+    MPI_buffer_size = env.MPI_buffer_size;
     if(MPI_Init_thread(NULL, NULL,MPI_THREAD_MULTIPLE,&provided)!=MPI_SUCCESS) exit(-1);
     if(provided < MPI_THREAD_MULTIPLE)
     {
@@ -157,6 +157,7 @@ MPI_Runner::MPI_Runner() {
     for (int i = 0; i < env.num_thread; i++) {
         thread_tasks.push_back(thread_MPI_task(i,MPI_buffer_size));
         thread_tasks[i].buffer.resize(MPI_buffer_size * env.chunk_state);
+        thread_tasks[i].buffer2.resize(MPI_buffer_size * env.chunk_state);
     }
 }
 void MPI_Runner::setFD(thread_MPI_task &task, Gate *&gate) {

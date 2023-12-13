@@ -150,6 +150,7 @@ void setENV(INIReader &reader) {
     env.is_subcircuit = reader.GetInteger(section, "is_subcircuit", 1);
     env.is_MPI = (seg.mpi > 0);
     env.MPI_testing = reader.GetInteger(section, "MPI_testing", 0);
+    env.MPI_buffer_size = reader.GetInteger(section, "MPI_buffe_size", 16);
     env.num_file = (1ULL << seg.file);
     env.num_thread = env.num_file;
     env.half_num_thread = env.num_thread / 2;
