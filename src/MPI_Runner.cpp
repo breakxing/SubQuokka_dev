@@ -70,16 +70,16 @@
         for (int jj = 0; jj < osz; jj++) {\
             if(skip_read_write(g,ii * osz + jj))\
                 continue;\
-            if(pread(env.fd_arr[task.fd_using[ii]], &(task.buffer[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
+            if(pread(env.fd_arr[task.fd_using[ii]], &(task.buffer1[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
                 ;\
         }\
     }\
-    g->run(task.buffer);\
+    g->run(task.buffer1);\
     for (int ii = 0; ii < fsz; ii++) {\
         for (int jj = 0; jj < osz; jj++) {\
             if(skip_read_write(g,ii * osz + jj))\
                 continue;\
-            if(pwrite(env.fd_arr[task.fd_using[ii]], &(task.buffer[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
+            if(pwrite(env.fd_arr[task.fd_using[ii]], &(task.buffer1[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
                 ;\
         }\
     }\
@@ -90,16 +90,16 @@
     int osz = task.fd_offset_using.size();\
     for (int ii = 0; ii < fsz; ii++) {\
         for (int jj = 0; jj < osz; jj++) {\
-            if(pread(env.fd_arr[task.fd_using[ii]], &(task.buffer[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
+            if(pread(env.fd_arr[task.fd_using[ii]], &(task.buffer1[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
                 ;\
         }\
     }\
     for (auto &g : subcircuit){\
-        g->run(task.buffer);\
+        g->run(task.buffer1);\
     }\
     for (int ii = 0; ii < fsz; ii++) {\
         for (int jj = 0; jj < osz; jj++) {\
-            if(pwrite(env.fd_arr[task.fd_using[ii]], &(task.buffer[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
+            if(pwrite(env.fd_arr[task.fd_using[ii]], &(task.buffer1[(ii * osz + jj) * env.chunk_state]), env.chunk_size, task.fd_offset_using[jj]))\
                 ;\
         }\
     }\
@@ -156,7 +156,7 @@ MPI_Runner::MPI_Runner() {
     }
     for (int i = 0; i < env.num_thread; i++) {
         thread_tasks.push_back(thread_MPI_task(i,MPI_buffer_size));
-        thread_tasks[i].buffer.resize(MPI_buffer_size * env.chunk_state);
+        thread_tasks[i].buffer1.resize(MPI_buffer_size * env.chunk_state);
         thread_tasks[i].buffer2.resize(MPI_buffer_size * env.chunk_state);
     }
 }
