@@ -6,7 +6,7 @@
 class thread_MPI_task
 {
 public:
-    std::vector<std::complex<double>> buffer;
+    std::vector<std::complex<double>> buffer1;
     vector<complex<double>>buffer2;
     std::vector<int> fd_table;
     std::vector<long long> fd_offset_table;
@@ -29,7 +29,8 @@ class MPI_Runner: public Simulator::circuitRunner {
     void MPI_Swap(thread_MPI_task &,Gate * &);
     void _thread_MPI_swap(thread_MPI_task &,Gate * &,bool &);
     void MPI_gate_scheduler(thread_MPI_task &,Gate * &);
-    void _thread_read1_recv1(thread_MPI_task &,Gate * &);
+    void _two_gate_mpi_read1_recv1(thread_MPI_task &,Gate * &);
+    void _mpi_one_gate_inner(thread_MPI_task &,Gate * &);
     void _thread_read2_recv2(thread_MPI_task &,Gate * &,int,long long);
     void _thread_read1_recv3(thread_MPI_task &,Gate * &,int);
     void _thread_no_exec_MPI(thread_MPI_task &,int round);

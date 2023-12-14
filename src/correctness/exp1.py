@@ -20,13 +20,11 @@ state_paths = ",".join(state_paths)
 # cir_path = "./MPI_circuit/ori/27/qft27.txt"
 cir_path = "cir.txt"
 cir = get_circuit()
-N = 22
+N = 23
 mpiqubit = 2
 
 for i in range(N):
     H(cir,i)
-for i in range(1):
-    H(cir,N - 1)
 
 
 

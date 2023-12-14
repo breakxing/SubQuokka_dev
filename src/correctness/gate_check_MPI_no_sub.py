@@ -257,8 +257,8 @@ print("[PASS]: RZZ gate done.")
 print("==================================================")
 
 # SWAP
-for k in range(n - 2,n):
-    for j in range(n - 2,n):
+for k in range(n):
+    for j in range(n):
         if k == j:
             continue
         cir = get_circuit()

@@ -30,6 +30,7 @@ public:
 
     string name;
     function<void (vector<complex<double>>& buffer)> run;
+    function<void (vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int off0,int off1,int round)> run_one_qubit_mpi;
     function<void (complex<double> *buffer)> run_dio;  // DIO version
     function<void (vector<complex<double>>& buffer, long long idx)> _run; // MEM version
     Gate(vector<int>);
@@ -53,6 +54,7 @@ public:
     H_Gate(vector<int>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
+    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class X_Gate: public ONE_QUBIT_GATE
@@ -61,6 +63,7 @@ public:
     X_Gate(vector<int>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
+    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class Y_Gate: public ONE_QUBIT_GATE
@@ -69,6 +72,7 @@ public:
     Y_Gate(vector<int>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
+    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class Z_Gate: public ONE_QUBIT_GATE
@@ -86,6 +90,7 @@ public:
     U1_Gate(vector<int>, vector<complex<double>>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
+    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class Phase_Gate: public ONE_QUBIT_GATE
@@ -106,6 +111,7 @@ public:
     RX_Gate(vector<int>, double);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
+    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class RY_Gate: public ONE_QUBIT_GATE
@@ -117,6 +123,7 @@ public:
     RY_Gate(vector<int>, double);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
+    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class RZ_Gate: public ONE_QUBIT_GATE
