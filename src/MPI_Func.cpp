@@ -235,11 +235,17 @@ void MPI_Runner::MPI_Swap(thread_MPI_task &task,Gate * &g)
         task.fd_using = {env.fd_arr[task.tid],env.fd_arr[task.tid]};
         loop_stride = env.qubit_size[g->targs[0] + 1];
     }
-    else
+    else //Use new algo
     {
         task.fd_using = {env.fd_arr[task.tid]};
         task.fd_offset_using = {0};
-        loop_stride = env.chunk_size << 1;
+        loop_stride = env.chunk_size * min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+        for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+        {
+            _mpi_one_gate_inner(task,g);
+            update_offset(task,loop_stride);
+        }
+        return;
     }
     for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
     {
@@ -250,16 +256,6 @@ void MPI_Runner::MPI_Swap(thread_MPI_task &task,Gate * &g)
             {
                 _thread_MPI_swap(task,g,firstround);
                 update_offset(task,env.chunk_size);
-            }
-        }
-        else if(isChunk(g->targs[0]))
-        {
-            if(env.thread_state == env.chunk_state && env.rank > task.partner_using[0])
-                _thread_no_exec_MPI(task,1);
-            else
-            {
-                _two_gate_mpi_read1_recv1(task,g);
-                update_offset(task,loop_stride);
             }
         }
         else

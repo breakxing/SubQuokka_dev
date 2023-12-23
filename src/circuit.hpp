@@ -54,7 +54,7 @@ public:
     H_Gate(vector<int>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class X_Gate: public ONE_QUBIT_GATE
@@ -63,7 +63,7 @@ public:
     X_Gate(vector<int>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class Y_Gate: public ONE_QUBIT_GATE
@@ -72,7 +72,7 @@ public:
     Y_Gate(vector<int>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class Z_Gate: public ONE_QUBIT_GATE
@@ -90,7 +90,7 @@ public:
     U1_Gate(vector<int>, vector<complex<double>>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class Phase_Gate: public ONE_QUBIT_GATE
@@ -111,7 +111,7 @@ public:
     RX_Gate(vector<int>, double);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class RY_Gate: public ONE_QUBIT_GATE
@@ -123,7 +123,7 @@ public:
     RY_Gate(vector<int>, double);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class RZ_Gate: public ONE_QUBIT_GATE
@@ -165,6 +165,7 @@ public:
     void run_chunk_chunk(vector<complex<double>> &);
     void run_nonchunk_chunk(vector<complex<double>> &);
     void run_nonchunk_nonchunk(vector<complex<double>> &);
+    void run_mpi_nonchunk_chunk(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class VSWAP_Gate_1_1: public SWAP_Gate
