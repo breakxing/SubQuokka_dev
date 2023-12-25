@@ -14,6 +14,7 @@ typedef enum gate_type{
     THREE_QUBIT = 3,
     VSWAP = 4,
     ERROR = 5,
+    MPI_VSWAP = 6,
 } GATE_TYPE;
 
 class Gate
@@ -172,6 +173,12 @@ class VSWAP_Gate_1_1: public SWAP_Gate
 {
 public:
     VSWAP_Gate_1_1(vector<int>);
+};
+
+class MPI_VSWAP_Gate_1_1: public SWAP_Gate
+{
+public:
+    MPI_VSWAP_Gate_1_1(vector<int>);
 };
 
 class CPhase_Gate: public TWO_QUBIT_GATE

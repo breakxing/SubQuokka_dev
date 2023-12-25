@@ -367,6 +367,8 @@ Gate *Simulator::setGate_MPI(string &line) {
         return setGate_vswap<VSWAP_Gate_1_1>(ss, 1);
     } else if (gate_ops == "VSWAP_2_2") {
         return setGate_vswap<VSWAP_Gate_2_2>(ss, 2);
+    } else if (gate_ops == "MPI_VSWAP_1_1") {
+        return setGate_vswap<MPI_VSWAP_Gate_1_1>(ss, 1);
     // } else if (gate_ops == "VSWAP_3_3") {
     //     return setGate_vswap<VSWAP_Gate_3_3>(ss, 3);
     // } else if (gate_ops == "VSWAP_4_4") {

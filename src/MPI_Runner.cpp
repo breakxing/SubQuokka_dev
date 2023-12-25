@@ -158,6 +158,8 @@ MPI_Runner::MPI_Runner() {
         thread_tasks.push_back(thread_MPI_task(i,MPI_buffer_size));
         thread_tasks[i].buffer1.resize(MPI_buffer_size * env.chunk_state);
         thread_tasks[i].buffer2.resize(MPI_buffer_size * env.chunk_state);
+        thread_tasks[i].buffer3.resize(MPI_buffer_size * env.chunk_state);
+        thread_tasks[i].buffer4.resize(MPI_buffer_size * env.chunk_state);
     }
 }
 void MPI_Runner::setFD(thread_MPI_task &task, Gate *&gate) {
@@ -415,14 +417,7 @@ void MPI_Runner::run(vector<vector<Gate *>> &subcircuits) {
             else {
                 if(subcircuit[0]->mpi_count)
                 {
-                    if(subcircuit[0]->name != "SWAP_Gate" || subcircuit.size() != 1)
-                    {
-                        if(task.tid == 0)
-                            cout<<"ERROR"<<endl;
-                        exit(-1);
-                    }
-                    else
-                        MPI_Swap(task,g);
+                    MPI_Swap(task,g);
                 }
                 else
                 {

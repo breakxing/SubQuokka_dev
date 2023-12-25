@@ -608,6 +608,12 @@ VSWAP_Gate_1_1::VSWAP_Gate_1_1(vector<int> targ): SWAP_Gate(targ) {
     name = "VSWAP_Gate_1_1";
 }
 
+MPI_VSWAP_Gate_1_1::MPI_VSWAP_Gate_1_1(vector<int> targ): SWAP_Gate(targ) {
+    type = MPI_VSWAP;
+    name = "MPI_VSWAP_Gate_1_1";
+}
+
+
 CPhase_Gate::CPhase_Gate(vector<int> targ, double phi): TWO_QUBIT_GATE(targ) {
     name = "CPhase_Gate";
     exp_iPhi = complex<double>(cos(phi), sin(phi));

@@ -180,7 +180,7 @@ void genCirFile(const string &filename, const string &cirname, vector<string> &g
                 bool has_mpi = false;
                 if(in_mpi_qubits(mpi_qubits,sortedCur[i].value) || in_mpi_qubits(mpi_qubits,sortedNext[i].value))
                 {
-                    strOut = "SWAP ";
+                    strOut = "MPI_VSWAP_1_1 ";
                     int m = min(sortedCur[i].value,sortedNext[i].value);
                     int M = max(sortedCur[i].value,sortedNext[i].value);
                     strOut += to_string(m) + " ";
