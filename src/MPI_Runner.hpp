@@ -8,8 +8,6 @@ class thread_MPI_task
 public:
     std::vector<std::complex<double>> buffer1;
     vector<complex<double>>buffer2;
-    vector<complex<double>>buffer3;
-    vector<complex<double>>buffer4;
     std::vector<int> fd_table;
     std::vector<long long> fd_offset_table;
     int tid;
