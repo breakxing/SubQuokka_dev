@@ -1,7 +1,7 @@
 import os
 
 
-qubits = 30
+qubits = 32
 os.system(f"g++ ../../../subcircuitFinder/finder.cpp -o ../../../subcircuitFinder/test")
 files = [f"h{qubits}.txt",f"qaoa{qubits}.txt",f"qft{qubits}.txt"]
 

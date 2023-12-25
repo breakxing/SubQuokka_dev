@@ -17,14 +17,14 @@ state_paths = [f"/mnt/state{i % 4}/path{i}" for i in range(1 << file_seg)]
 # state_paths = [f"./state/path{i}" for i in range(1 << file_seg)]
 state_paths = ",".join(state_paths)
 
-# cir_path = "./MPI_circuit/ori/27/qft27.txt"
+# cir_path = "./MPI_circuit/ori/21/qaoa21.txt"
 cir_path = "cir.txt"
 cir = get_circuit()
-N = 33
+N = 29
 mpiqubit = 1
 
-
-SWAP(cir,5,12)
+for i in range(10):
+    H(cir,N - 1)
 
 
 

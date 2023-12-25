@@ -1,0 +1,16 @@
+[Config File]: MPI_circuit/sub/31/myini.ini
+[Circuit File]: MPI_circuit/sub/31/qaoa31.txt
+[Config File]: MPI_circuit/sub/31/myini.ini
+[Circuit File]: MPI_circuit/sub/31/qaoa31.txt
+MPI Mode
+[1703359924.681851] [paslab48:188615:0]     ucp_context.c:1177 UCX  WARN  network device 'mlx5_1:1' is not available, please use one or more of: 'enp225s0f0np0'(tcp), 'enp2s0'(tcp), 'lo'(tcp), 'mlx5_0:1'(ib)
+MPI Mode
+[1703359924.798456] [paslab42:683660:0]     ucp_context.c:1177 UCX  WARN  network device 'mlx5_0:1' is not available, please use one or more of: 'eno1'(tcp), 'enp225s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
+[1703359924.849762] [paslab42:683660:0]     ucp_context.c:1177 UCX  WARN  network device 'mlx5_0:1' is not available, please use one or more of: 'eno1'(tcp), 'enp225s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
+[1703359924.856125] [paslab48:188615:0]     ucp_context.c:1177 UCX  WARN  network device 'mlx5_1:1' is not available, please use one or more of: 'enp225s0f0np0'(tcp), 'enp2s0'(tcp), 'lo'(tcp), 'mlx5_0:1'(ib)
+[1703359924.883961] [paslab42:683660:0]     ucp_context.c:1177 UCX  WARN  network device 'mlx5_0:1' is not available, please use one or more of: 'eno1'(tcp), 'enp225s0f1np1'(tcp), 'lo'(tcp), 'mlx5_1:1'(ib)
+[1703359924.898502] [paslab48:188615:0]     ucp_context.c:1177 UCX  WARN  network device 'mlx5_1:1' is not available, please use one or more of: 'enp225s0f0np0'(tcp), 'enp2s0'(tcp), 'lo'(tcp), 'mlx5_0:1'(ib)
+1311.78s
+1311.78s
+Rank0 MPI_Finalize Success
+Rank1 MPI_Finalize Success
