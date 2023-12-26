@@ -353,7 +353,7 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
             update_offset(task,loop_stride);
         }
     }
-    else//2 gate unitary (not use new algo)
+    else
     {
         if(isMpi(g->targs[0]))
         {
@@ -443,7 +443,7 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
                 }
             }
         }
-        else
+        else // use new algo
         {
             rank0 = env.rank ^ mpi_targ_mask_0;
             task.partner_using = {rank0};
