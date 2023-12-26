@@ -449,17 +449,23 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
             task.partner_using = {rank0};
             task.fd_using = {env.fd_arr[task.tid]};
             task.fd_offset_using = {0};
-            loop_stride = env.chunk_size << 1;
-            if(env.thread_state == env.chunk_state && env.rank > task.partner_using[0])
-                _thread_no_exec_MPI(task,1);
-            else
+            // loop_stride = env.chunk_size << 1;
+            loop_stride = env.chunk_size * min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+            for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
             {
-                for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
-                {
-                    _two_gate_mpi_read1_recv1(task,g);
-                    update_offset(task,loop_stride);
-                }
+                _mpi_one_gate_inner(task,g);
+                update_offset(task,loop_stride);
             }
+            // if(env.thread_state == env.chunk_state && env.rank > task.partner_using[0])
+            //     _thread_no_exec_MPI(task,1);
+            // else
+            // {
+            //     for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+            //     {
+            //         _two_gate_mpi_read1_recv1(task,g);
+            //         update_offset(task,loop_stride);
+            //     }
+            // }
         }
     }
 }

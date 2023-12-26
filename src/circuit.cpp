@@ -274,6 +274,16 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer[off2] = coeff[ 8] * q0 + coeff[ 9] * q1 + coeff[10] * q2 + coeff[11] * q3;\
     buffer[off3] = coeff[12] * q0 + coeff[13] * q1 + coeff[14] * q2 + coeff[15] * q3;
 
+#define U2MPICHUNK \
+    q0 = (*buffer1)[off0];\
+    q1 = (*buffer1)[off1];\
+    q2 = (*buffer2)[off2];\
+    q3 = (*buffer2)[off3];\
+    (*buffer1)[off0] = coeff[ 0] * q0 + coeff[ 1] * q1 + coeff[ 2] * q2 + coeff[ 3] * q3;\
+    (*buffer1)[off1] = coeff[ 4] * q0 + coeff[ 5] * q1 + coeff[ 6] * q2 + coeff[ 7] * q3;\
+    (*buffer2)[off2] = coeff[ 8] * q0 + coeff[ 9] * q1 + coeff[10] * q2 + coeff[11] * q3;\
+    (*buffer2)[off3] = coeff[12] * q0 + coeff[13] * q1 + coeff[14] * q2 + coeff[15] * q3;
+
 #define SWAPGate \
     q0 = buffer[off0];\
     q1 = buffer[off1];\
@@ -541,8 +551,14 @@ U2_Gate::U2_Gate(vector<int> targ, vector<complex<double>> matrix): TWO_QUBIT_GA
         res = (b3 << 3) | (b4 << 2) | (b1 << 1) | b2;
         coeff[i] = matrix[res];
     }
-
-    bind_gate_2(U2_Gate)
+    if(mpi_count == 1 && chunk_count == 1)
+    {
+        bind_gate_mpi_1(U2_Gate)
+    }
+    else
+    {
+        bind_gate_2(U2_Gate)
+    }
 }
 
 void U2_Gate::run_chunk_chunk(vector<complex<double>> &buffer){
@@ -564,6 +580,14 @@ void U2_Gate::run_nonchunk_nonchunk(vector<complex<double>> &buffer){
     nonchunk_nonchunk_gate(init_off4(int, 0, half_off_0, half_off_1, (half_off_0 + half_off_1)),
                     update_off4(1), 
                     U2Gate)
+}
+
+void U2_Gate::run_mpi_chunk(vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int offset0,int offset1,int round){
+    mpi_nonchunk_chunk(init_off4(int,offset0 * env.chunk_state,offset0 * env.chunk_state + half_off_0,offset1 * env.chunk_state, offset1 * env.chunk_state + half_off_0),
+                    round,
+                    update_off4(1),
+                    update_off4(half_off_0),
+                    U2MPICHUNK)
 }
 
 SWAP_Gate::SWAP_Gate(vector<int> targ): TWO_QUBIT_GATE(targ) {

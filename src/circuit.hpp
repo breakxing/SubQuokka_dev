@@ -157,6 +157,7 @@ public:
     void run_chunk_chunk(vector<complex<double>> &);
     void run_nonchunk_chunk(vector<complex<double>> &);
     void run_nonchunk_nonchunk(vector<complex<double>> &);
+    void run_mpi_chunk(vector<complex<double>>*,vector<complex<double>>*,int,int,int);
 };
 
 class SWAP_Gate: public TWO_QUBIT_GATE

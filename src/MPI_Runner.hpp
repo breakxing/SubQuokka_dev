@@ -48,7 +48,6 @@ class MPI_Runner: public Simulator::circuitRunner {
     void MPI_special_gate_inner(thread_MPI_task &,Gate * &,long long,int);
 
     void MPI_vs2_2(thread_MPI_task &,Gate * &);
-    void aaa(vector<complex<double>>&,vector<complex<double>>&,vector<complex<double>>&,vector<complex<double>>&,vector<int>&);
 
 public:
     MPI_Runner();
