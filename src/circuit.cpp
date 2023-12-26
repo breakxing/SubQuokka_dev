@@ -609,7 +609,7 @@ VSWAP_Gate_1_1::VSWAP_Gate_1_1(vector<int> targ): SWAP_Gate(targ) {
 }
 
 MPI_VSWAP_Gate_1_1::MPI_VSWAP_Gate_1_1(vector<int> targ): SWAP_Gate(targ) {
-    type = MPI_VSWAP;
+    type = VSWAP;
     name = "MPI_VSWAP_Gate_1_1";
 }
 
@@ -995,6 +995,117 @@ VSWAP_Gate_2_2::VSWAP_Gate_2_2(vector<int> targ): Gate(targ) {
     off_3 = half_off_3 * 2;
         
     run = bind(&VSWAP_Gate_2_2::run_nonchunk_chunk, this, _1);
+}
+
+MPI_VSWAP_Gate_2_2::MPI_VSWAP_Gate_2_2(vector<int> targ): Gate(targ) {
+    type = VSWAP;
+    name = "MPI_VSWAP_Gate_2_2";
+    half_off_0 = env.qubit_offset[targ[0]];
+    half_off_1 = env.qubit_offset[targ[1]];
+    half_off_2 = 0;
+    half_off_3 = 0;
+        
+    off_0 = half_off_0 * 2;
+    off_1 = half_off_1 * 2;
+    off_2 = half_off_2 * 2;
+    off_3 = half_off_3 * 2;
+    run_mpi_vswap2_2 = bind(&MPI_VSWAP_Gate_2_2::run_vswap_2_2,this,_1,_2,_3,_4,_5);
+}
+
+void MPI_VSWAP_Gate_2_2::run_vswap_2_2(vector<complex<double>> *buffer1,vector<complex<double>> *buffer2,vector<complex<double>> *buffer3,vector<complex<double>> *buffer4,int round)
+{
+    int off0001 = half_off_0;
+    int off0010 = half_off_1;
+    int off0011 = half_off_0 + half_off_1;
+    int off0100 = half_off_2;
+    int off0110 = half_off_1 + half_off_2;
+    int off0111 = half_off_0 + half_off_1 + half_off_2;
+    int off1000 = half_off_3;
+    int off1001 = half_off_0 + half_off_3;
+    int off1011 = half_off_0 + half_off_1 + half_off_3;
+    int off1100 = half_off_2 + half_off_3;
+    int off1101 = half_off_0 + half_off_2 + half_off_3;
+    int off1110 = half_off_1 + half_off_2 + half_off_3;
+
+    complex<double> q0001;
+    complex<double> q0010;
+    complex<double> q0011;
+    complex<double> q0100;
+    complex<double> q0110;
+    complex<double> q0111;
+    complex<double> q1000;
+    complex<double> q1001;
+    complex<double> q1011;
+    complex<double> q1100;
+    complex<double> q1101;
+    complex<double> q1110;
+
+    for (int i = 0; i < round * env.chunk_state; i += off_1) {
+        for (int j = 0; j < half_off_1; j += off_0) {
+            for (int k = 0; k < half_off_0; k++) {
+                q0001 = (*buffer1)[off0001];
+                q0010 = (*buffer1)[off0010];
+                q0011 = (*buffer1)[off0011];
+                q0100 = (*buffer2)[off0100];
+                q0110 = (*buffer2)[off0110];
+                q0111 = (*buffer2)[off0111];
+                q1000 = (*buffer3)[off1000];
+                q1001 = (*buffer3)[off1001];
+                q1011 = (*buffer3)[off1011];
+                q1100 = (*buffer4)[off1100];
+                q1101 = (*buffer4)[off1101];
+                q1110 = (*buffer4)[off1110];
+                (*buffer1)[off0001] = q0100;
+                (*buffer1)[off0010] = q1000;
+                (*buffer1)[off0011] = q1100;
+                (*buffer2)[off0100] = q0001;
+                (*buffer2)[off0110] = q1001;
+                (*buffer2)[off0111] = q1101;
+                (*buffer3)[off1000] = q0010;
+                (*buffer3)[off1001] = q0110;
+                (*buffer3)[off1011] = q1110;
+                (*buffer4)[off1100] = q0011;
+                (*buffer4)[off1101] = q0111;
+                (*buffer4)[off1110] = q1011;
+                off0001++;
+                off0010++;
+                off0011++;
+                off0100++;
+                off0110++;
+                off0111++;
+                off1000++;
+                off1001++;
+                off1011++;
+                off1100++;
+                off1101++;
+                off1110++;
+            }
+            off0001 += half_off_0;
+            off0010 += half_off_0;
+            off0011 += half_off_0;
+            off0100 += half_off_0;
+            off0110 += half_off_0;
+            off0111 += half_off_0;
+            off1000 += half_off_0;
+            off1001 += half_off_0;
+            off1011 += half_off_0;
+            off1100 += half_off_0;
+            off1101 += half_off_0;
+            off1110 += half_off_0;
+        }
+        off0001 += half_off_1;
+        off0010 += half_off_1;
+        off0011 += half_off_1;
+        off0100 += half_off_1;
+        off0110 += half_off_1;
+        off0111 += half_off_1;
+        off1000 += half_off_1;
+        off1001 += half_off_1;
+        off1011 += half_off_1;
+        off1100 += half_off_1;
+        off1101 += half_off_1;
+        off1110 += half_off_1;
+    }
 }
 
 void VSWAP_Gate_2_2::run_nonchunk_chunk(vector<complex<double>> &buffer){

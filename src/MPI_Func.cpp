@@ -203,6 +203,47 @@ void MPI_Runner::update_offset(thread_MPI_task &task,long long &off)
     for(auto &x:task.fd_offset_using)
         x+=off;
 }
+void MPI_Runner::MPI_vs2_2(thread_MPI_task &task,Gate * &g)
+{
+    long long mpi_targ_mask_2 = 1 << (g->targs[2] - seg.N);
+    long long mpi_targ_mask_3 = 1 << (g->targs[3] - seg.N);
+    int rank0 = env.rank & (~(mpi_targ_mask_3 | mpi_targ_mask_2));
+    int rank1 = rank0 | mpi_targ_mask_2;
+    int rank2 = rank0 | mpi_targ_mask_3;
+    int rank3 = rank0 | mpi_targ_mask_3 | mpi_targ_mask_2;
+    long long loop_bound = env.thread_size;
+    long long loop_stride = env.chunk_size * min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+    int one_round_chunk = min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+    task.partner_using = {rank0,rank1,rank2,rank3};
+    task.fd_using = {env.fd_arr[task.tid],env.fd_arr[task.tid],env.fd_arr[task.tid],env.fd_arr[task.tid]};
+    task.fd_offset_using = {0,0,0,0};
+    int member_th = find(task.partner_using.begin(),task.partner_using.end(),env.rank) - task.partner_using.begin();
+    vector<vector<complex<double>>*>buffer_using = {&task.buffer1,&task.buffer2,&task.buffer3,&task.buffer4};
+    vector<complex<double>>*rank_buffer = buffer_using[member_th];
+    for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+    {
+        if(pread(task.fd_using[0],rank_buffer->data(),one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
+        for(int i = 0;i < 4;i++)
+        {
+            if(member_th != i)
+            {
+                MPI_Isend(rank_buffer->data(),one_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[i],task.tid,MPI_COMM_WORLD,&task.request[i]);
+                MPI_Irecv(buffer_using[i]->data(),one_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[i],task.tid,MPI_COMM_WORLD,&task.request[i + 4]);
+            }
+        }
+        for(int i = 0;i < 4;i++)
+        {
+            if(member_th != i)
+            {
+                MPI_Wait(&task.request[i],MPI_STATUS_IGNORE);
+                MPI_Wait(&task.request[i + 4],MPI_STATUS_IGNORE);
+            }
+        }
+        g->run_mpi_vswap2_2(&task.buffer1,&task.buffer2,&task.buffer3,&task.buffer4,one_round_chunk);
+        if(pwrite(task.fd_using[0],rank_buffer->data(),one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
+        update_offset(task,loop_stride);
+    }
+}
 void MPI_Runner::MPI_Swap(thread_MPI_task &task,Gate * &g)
 {
     long long mpi_targ_mask_0 = 1 << (g->targs[0] - seg.N);

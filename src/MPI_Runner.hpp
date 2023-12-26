@@ -8,6 +8,8 @@ class thread_MPI_task
 public:
     std::vector<std::complex<double>> buffer1;
     vector<complex<double>>buffer2;
+    vector<complex<double>>buffer3;
+    vector<complex<double>>buffer4;
     std::vector<int> fd_table;
     std::vector<long long> fd_offset_table;
     int tid;
@@ -44,6 +46,9 @@ class MPI_Runner: public Simulator::circuitRunner {
     void MPI_one_qubit_gate_diagonal(thread_MPI_task &,Gate * &);
     void MPI_two_qubit_gate_diagonal(thread_MPI_task &,Gate * &);
     void MPI_special_gate_inner(thread_MPI_task &,Gate * &,long long,int);
+
+    void MPI_vs2_2(thread_MPI_task &,Gate * &);
+    void aaa(vector<complex<double>>&,vector<complex<double>>&,vector<complex<double>>&,vector<complex<double>>&,vector<int>&);
 
 public:
     MPI_Runner();

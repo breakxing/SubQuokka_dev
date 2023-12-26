@@ -158,6 +158,8 @@ MPI_Runner::MPI_Runner() {
         thread_tasks.push_back(thread_MPI_task(i,MPI_buffer_size));
         thread_tasks[i].buffer1.resize(MPI_buffer_size * env.chunk_state);
         thread_tasks[i].buffer2.resize(MPI_buffer_size * env.chunk_state);
+        thread_tasks[i].buffer3.resize(MPI_buffer_size * env.chunk_state);
+        thread_tasks[i].buffer4.resize(MPI_buffer_size * env.chunk_state);
     }
 }
 void MPI_Runner::setFD(thread_MPI_task &task, Gate *&gate) {
@@ -370,10 +372,13 @@ void MPI_Runner::run(vector<vector<Gate *>> &subcircuits) {
             Gate *g = subcircuit[0];
             if (g->type == VSWAP) {
                 vector<int> targ = subcircuit[0]->targs;  // increasing
+                int mpi_count = subcircuit[0]->mpi_count;
                 int file_count = subcircuit[0]->file_count;
                 int middle_count = subcircuit[0]->middle_count;
                 int chunk_count = subcircuit[0]->chunk_count;
-                if(file_count != 0)
+                if(mpi_count == 1) MPI_Swap(task,g);
+                else if(mpi_count == 2) MPI_vs2_2(task,g);
+                else if(file_count != 0)
                 {
                     if(g->name == "VSWAP_Gate_1_1")
                         all_thread_drive_scheduler(task,g);
@@ -413,15 +418,8 @@ void MPI_Runner::run(vector<vector<Gate *>> &subcircuits) {
                 }
             }
             else {
-                if(subcircuit[0]->mpi_count)
-                {
-                    MPI_Swap(task,g);
-                }
-                else
-                {
-                    setFD_sub(task);
-                    outer_loop_m0(innerloop_sub)
-                }
+                setFD_sub(task);
+                outer_loop_m0(innerloop_sub)
             }
             #pragma omp barrier
             #pragma omp master

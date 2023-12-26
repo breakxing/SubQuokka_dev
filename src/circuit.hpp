@@ -14,7 +14,6 @@ typedef enum gate_type{
     THREE_QUBIT = 3,
     VSWAP = 4,
     ERROR = 5,
-    MPI_VSWAP = 6,
 } GATE_TYPE;
 
 class Gate
@@ -32,6 +31,7 @@ public:
     string name;
     function<void (vector<complex<double>>& buffer)> run;
     function<void (vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int off0,int off1,int round)> run_one_qubit_mpi;
+    function<void (vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,vector<complex<double>>*buffer3,vector<complex<double>>*buffer4,int round)> run_mpi_vswap2_2;
     function<void (complex<double> *buffer)> run_dio;  // DIO version
     function<void (vector<complex<double>>& buffer, long long idx)> _run; // MEM version
     Gate(vector<int>);
@@ -243,6 +243,23 @@ public:
 
     VSWAP_Gate_2_2(vector<int>);
     void run_nonchunk_chunk(vector<complex<double>> &);
+};
+
+class MPI_VSWAP_Gate_2_2: public Gate
+{
+public:
+    int half_off_0;
+    int half_off_1;
+    int half_off_2;
+    int half_off_3;
+
+    int off_0;
+    int off_1;
+    int off_2;
+    int off_3;
+
+    MPI_VSWAP_Gate_2_2(vector<int>);
+    void run_vswap_2_2(vector<complex<double>> *,vector<complex<double>> *,vector<complex<double>> *,vector<complex<double>> *,int);
 };
 
 class VSWAP_Gate_3_3: public Gate
