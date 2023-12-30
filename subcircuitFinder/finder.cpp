@@ -204,7 +204,7 @@ void genCirFile(const string &filename, const string &cirname, vector<string> &g
                         ofs << "1" << endl;
                         ofs << strOut << endl;
                     }
-                    strOut = "SWAP ";
+                    strOut = "MPI_VSWAP_1_1 ";
                     int m = min(sortedCur[i + 1].value,sortedNext[i + 1].value);
                     int M = max(sortedCur[i + 1].value,sortedNext[i + 1].value);
                     strOut += to_string(m) + " ";
@@ -766,7 +766,7 @@ int main(int argc, char *argv[]) {
     if (argc >= 4)
         cirname = argv[3];
     
-    size_t qubits = 30;
+    size_t qubits = 40;
     vector<Node> dags (qubits);
     vector<Node*> tails (qubits);
     for(int i = 0; i < qubits; i++)
