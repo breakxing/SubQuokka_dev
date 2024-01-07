@@ -251,6 +251,7 @@ void IO_Runner::MPI_Swap(thread_IO_task &task,Gate * &g)
     long long loop_bound = env.thread_size;
     long long loop_stride;
     bool firstround = true;
+    task.has_non_blocking = true;
     task.partner_using = {int((long long)env.rank ^ mpi_targ_mask_1)};
     if(isMpi(g->targs[0]))
     {
@@ -281,6 +282,7 @@ void IO_Runner::MPI_Swap(thread_IO_task &task,Gate * &g)
         task.fd_using = {env.fd_arr[task.tid]};
         task.fd_offset_using = {0};
         loop_stride = env.chunk_size * min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+        task.has_non_blocking = false;
         for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
         {
             _mpi_one_gate_inner(task,g);
@@ -355,6 +357,7 @@ void IO_Runner::MPI_gate_scheduler(thread_IO_task &task,Gate * &g)
     }
     else
     {
+        task.has_non_blocking = true;
         if(isMpi(g->targs[0]))
         {
             rank0 = env.rank & (~(mpi_targ_mask_0 | mpi_targ_mask_2));
@@ -450,6 +453,7 @@ void IO_Runner::MPI_gate_scheduler(thread_IO_task &task,Gate * &g)
             task.fd_using = {env.fd_arr[task.tid]};
             task.fd_offset_using = {0};
             loop_stride = env.chunk_size * min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+            task.has_non_blocking = false;
             for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
             {
                 _mpi_one_gate_inner(task,g);
