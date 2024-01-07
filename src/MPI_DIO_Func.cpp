@@ -9,16 +9,16 @@
 #include <algorithm>
 #include "circuit.hpp"
 #include <functional>
-#include "MPI_Runner.hpp"
+#include "DIO_Runner.hpp"
 
-bool MPI_Runner::skip_read_write(Gate * & g,const int &idx)
+bool DIO_Runner::skip_read_write(Gate * & g,const int &idx)
 {
-    if((g->name == "Z_Gate" || g->name == "Phase_Gate") && (idx == 0) && (!isChunk(g->targs[0]) && (!isMpi(g->targs[0])))) return true;
-    else if((g->name == "SWAP_Gate") && (idx == 0 || idx == 3) && (!isChunk(g->targs[0]))) return true;
-    else if(g->name == "CPhase_Gate" && (idx != 3) && (!isChunk(g->targs[1]) && (!isMpi(g->targs[1])))) return true;
+    if((g->name == "Z_Gate_DIO" || g->name == "Phase_Gate_DIO") && (idx == 0) && (!isChunk(g->targs[0]) && (!isMpi(g->targs[0])))) return true;
+    else if((g->name == "SWAP_Gate_DIO") && (idx == 0 || idx == 3) && (!isChunk(g->targs[0]))) return true;
+    else if(g->name == "CPhase_Gate_DIO" && (idx != 3) && (!isChunk(g->targs[1]) && (!isMpi(g->targs[1])))) return true;
     return false;
 }
-void MPI_Runner::all_thread_drive_scheduler(thread_MPI_task &task,Gate * &g)
+void DIO_Runner::all_thread_drive_scheduler(thread_DIO_task &task,Gate * &g)
 {
     vector<int> targ = g->targs;
     int tid = task.fd_table[0];
@@ -99,7 +99,7 @@ void MPI_Runner::all_thread_drive_scheduler(thread_MPI_task &task,Gate * &g)
         }
     }
 }
-void MPI_Runner::all_thread_drive_vs2_2(thread_MPI_task &task,Gate * &g)
+void DIO_Runner::all_thread_drive_vs2_2(thread_DIO_task &task,Gate * &g)
 {
     vector<int> targ = g->targs;
     int tid = task.fd_table[0];
@@ -154,7 +154,7 @@ void MPI_Runner::all_thread_drive_vs2_2(thread_MPI_task &task,Gate * &g)
         }
     }
 }
-void MPI_Runner::inner_all_thread(thread_MPI_task &task,Gate * &g,long long func_loop_size,int round)
+void DIO_Runner::inner_all_thread(thread_DIO_task &task,Gate * &g,long long func_loop_size,int round)
 {
     for(long long i = 0;i < func_loop_size;i += env.chunk_size)
     {
@@ -163,7 +163,7 @@ void MPI_Runner::inner_all_thread(thread_MPI_task &task,Gate * &g,long long func
             if(skip_read_write(g,j)) continue;
             if(pread(task.fd_using[j],&task.buffer1[task.gate_buffer_using[j] * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
         }
-        g->run(task.buffer1);
+        g->run_dio(task.buffer1);
         for(int j = 0;j < round;j++)
         {
             if(skip_read_write(g,j)) continue;
@@ -172,11 +172,11 @@ void MPI_Runner::inner_all_thread(thread_MPI_task &task,Gate * &g,long long func
         update_offset(task,env.chunk_size);
     }
 }
-void MPI_Runner::MPI_special_gate_inner(thread_MPI_task &task,Gate * &g,long long func_loop_size,int round)
+void DIO_Runner::MPI_special_gate_inner(thread_DIO_task &task,Gate * &g,long long func_loop_size,int round)
 {
     long long stride = env.chunk_size;
     int lowest_idx = 3;
-    if(g->name == "CPhase_Gate" && isMpi(g->targs[1]) && isFile(g->targs[0]))
+    if(g->name == "CPhase_Gate_DIO" && isMpi(g->targs[1]) && isFile(g->targs[0]))
         stride = env.chunk_size << 1;
     for(long long i = 0;i < func_loop_size;i += stride)
     {
@@ -186,10 +186,10 @@ void MPI_Runner::MPI_special_gate_inner(thread_MPI_task &task,Gate * &g,long lon
             if(pread(task.fd_using[j],&task.buffer1[task.gate_buffer_using[j] * env.chunk_state],env.chunk_size,task.fd_offset_using[j]));
             lowest_idx = min(lowest_idx,task.gate_buffer_using[j]);
         }
-        if(g->name == "Z_Gate" || g->name == "Phase_Gate" || g->name == "RZ_Gate" || g->name == "RZZ_Gate" || g->name == "CPhase_Gate")
-            g->run(task.buffer1);
+        if(g->name == "Z_Gate_DIO" || g->name == "Phase_Gate_DIO" || g->name == "RZ_Gate_DIO" || g->name == "RZZ_Gate_DIO" || g->name == "CPhase_Gate_DIO")
+            g->run_dio(task.buffer1);
         else
-            g->run_one_qubit_mpi(&task.buffer1,&task.buffer2,lowest_idx,lowest_idx + 1,1);
+            g->run_one_qubit_mpi_dio(task.buffer1,task.buffer2,lowest_idx,lowest_idx + 1,1);
         for(int j = 0;j < round;j++)
         {
             if(skip_read_write(g,j)) continue;
@@ -198,12 +198,12 @@ void MPI_Runner::MPI_special_gate_inner(thread_MPI_task &task,Gate * &g,long lon
         update_offset(task,stride);
     }
 }
-void MPI_Runner::update_offset(thread_MPI_task &task,long long &off)
+void DIO_Runner::update_offset(thread_DIO_task &task,long long &off)
 {
     for(auto &x:task.fd_offset_using)
         x+=off;
 }
-void MPI_Runner::MPI_vs2_2(thread_MPI_task &task,Gate * &g)
+void DIO_Runner::MPI_vs2_2(thread_DIO_task &task,Gate * &g)
 {
     long long mpi_targ_mask_2 = 1 << (g->targs[2] - seg.N);
     long long mpi_targ_mask_3 = 1 << (g->targs[3] - seg.N);
@@ -218,17 +218,17 @@ void MPI_Runner::MPI_vs2_2(thread_MPI_task &task,Gate * &g)
     task.fd_using = {env.fd_arr[task.tid],env.fd_arr[task.tid],env.fd_arr[task.tid],env.fd_arr[task.tid]};
     task.fd_offset_using = {0,0,0,0};
     int member_th = find(task.partner_using.begin(),task.partner_using.end(),env.rank) - task.partner_using.begin();
-    vector<vector<complex<double>>*>buffer_using = {&task.buffer1,&task.buffer2,&task.buffer3,&task.buffer4};
-    vector<complex<double>>*rank_buffer = buffer_using[member_th];
+    vector<complex<double>*>buffer_using = {task.buffer1,task.buffer2,task.buffer3,task.buffer4};
+    complex<double>*rank_buffer = buffer_using[member_th];
     for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
     {
-        if(pread(task.fd_using[0],rank_buffer->data(),one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
+        if(pread(task.fd_using[0],rank_buffer,one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
         for(int i = 0;i < 4;i++)
         {
             if(member_th != i)
             {
-                MPI_Isend(rank_buffer->data(),one_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[i],task.tid,MPI_COMM_WORLD,&task.request[i]);
-                MPI_Irecv(buffer_using[i]->data(),one_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[i],task.tid,MPI_COMM_WORLD,&task.request[i + 4]);
+                MPI_Isend(rank_buffer,one_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[i],task.tid,MPI_COMM_WORLD,&task.request[i]);
+                MPI_Irecv(buffer_using[i],one_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[i],task.tid,MPI_COMM_WORLD,&task.request[i + 4]);
             }
         }
         for(int i = 0;i < 4;i++)
@@ -239,18 +239,19 @@ void MPI_Runner::MPI_vs2_2(thread_MPI_task &task,Gate * &g)
                 MPI_Wait(&task.request[i + 4],MPI_STATUS_IGNORE);
             }
         }
-        g->run_mpi_vswap2_2(&task.buffer1,&task.buffer2,&task.buffer3,&task.buffer4,one_round_chunk);
-        if(pwrite(task.fd_using[0],rank_buffer->data(),one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
+        g->run_mpi_vswap2_2_dio(task.buffer1,task.buffer2,task.buffer3,task.buffer4,one_round_chunk);
+        if(pwrite(task.fd_using[0],rank_buffer,one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
         update_offset(task,loop_stride);
     }
 }
-void MPI_Runner::MPI_Swap(thread_MPI_task &task,Gate * &g)
+void DIO_Runner::MPI_Swap(thread_DIO_task &task,Gate * &g)
 {
     long long mpi_targ_mask_0 = 1 << (g->targs[0] - seg.N);
     long long mpi_targ_mask_1 = 1 << (g->targs[1] - seg.N);
     long long loop_bound = env.thread_size;
     long long loop_stride;
     bool firstround = true;
+    task.has_non_blocking = true;
     task.partner_using = {int((long long)env.rank ^ mpi_targ_mask_1)};
     if(isMpi(g->targs[0]))
     {
@@ -281,6 +282,7 @@ void MPI_Runner::MPI_Swap(thread_MPI_task &task,Gate * &g)
         task.fd_using = {env.fd_arr[task.tid]};
         task.fd_offset_using = {0};
         loop_stride = env.chunk_size * min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+        task.has_non_blocking = false;
         for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
         {
             _mpi_one_gate_inner(task,g);
@@ -306,7 +308,7 @@ void MPI_Runner::MPI_Swap(thread_MPI_task &task,Gate * &g)
         }
     }
 }
-void MPI_Runner::_thread_MPI_swap(thread_MPI_task &task,Gate * &g,bool &firstround)
+void DIO_Runner::_thread_MPI_swap(thread_DIO_task &task,Gate * &g,bool &firstround)
 {
     int partner_rank = task.partner_using[0];
     int member_th = env.rank > partner_rank? 1 : 0;
@@ -320,14 +322,14 @@ void MPI_Runner::_thread_MPI_swap(thread_MPI_task &task,Gate * &g,bool &firstrou
     MPI_Wait(&task.request[!member_th],MPI_STATUS_IGNORE);
     if(pwrite(task.fd_using[!member_th],&task.buffer1[(!member_th) * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + thread_member_th * env.chunk_size));
 }
-void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
+void DIO_Runner::MPI_gate_scheduler(thread_DIO_task &task,Gate * &g)
 {
-    if(g->name == "Z_Gate" || g->name == "Phase_Gate" || g->name == "RZ_Gate")
+    if(g->name == "Z_Gate_DIO" || g->name == "Phase_Gate_DIO" || g->name == "RZ_Gate_DIO")
     {
         MPI_one_qubit_gate_diagonal(task,g);
         return;
     }
-    else if(g->name == "CPhase_Gate" || g->name == "RZZ_Gate")
+    else if(g->name == "CPhase_Gate_DIO" || g->name == "RZZ_Gate_DIO")
     {
         MPI_two_qubit_gate_diagonal(task,g);
         return;
@@ -355,6 +357,7 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
     }
     else
     {
+        task.has_non_blocking = true;
         if(isMpi(g->targs[0]))
         {
             rank0 = env.rank & (~(mpi_targ_mask_0 | mpi_targ_mask_2));
@@ -450,6 +453,7 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
             task.fd_using = {env.fd_arr[task.tid]};
             task.fd_offset_using = {0};
             loop_stride = env.chunk_size * min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+            task.has_non_blocking = false;
             for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
             {
                 _mpi_one_gate_inner(task,g);
@@ -458,7 +462,7 @@ void MPI_Runner::MPI_gate_scheduler(thread_MPI_task &task,Gate * &g)
         }
     }
 }
-void MPI_Runner::_two_gate_mpi_read1_recv1(thread_MPI_task &task,Gate * &g)
+void DIO_Runner::_two_gate_mpi_read1_recv1(thread_DIO_task &task,Gate * &g)
 {
     int num_worker = (env.chunk_state == env.thread_state)? 1 : 2;
     int member_th = env.rank > task.partner_using[0]? 1 : 0;
@@ -472,7 +476,7 @@ void MPI_Runner::_two_gate_mpi_read1_recv1(thread_MPI_task &task,Gate * &g)
     }
     if(pread(task.fd_using[0],&task.buffer1[member_th * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + member_th * env.chunk_size));
     MPI_Wait(&task.request[!member_th],MPI_STATUS_IGNORE);
-    g->run(task.buffer1);
+    g->run_dio(task.buffer1);
     MPI_Isend(&task.buffer1[(!member_th) * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request[!member_th]);
     if(pwrite(task.fd_using[0],&task.buffer1[member_th * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + member_th * env.chunk_size));
     if(num_worker == 2)
@@ -481,7 +485,7 @@ void MPI_Runner::_two_gate_mpi_read1_recv1(thread_MPI_task &task,Gate * &g)
         if(pwrite(task.fd_using[0],&task.buffer1[env.chunk_state << 1],env.chunk_size,task.fd_offset_using[0] + (!member_th) * env.chunk_size));
     }
 }
-void MPI_Runner::_mpi_one_gate_inner(thread_MPI_task &task,Gate * &g)
+void DIO_Runner::_mpi_one_gate_inner(thread_DIO_task &task,Gate * &g)
 {
     int num_worker = (env.chunk_state == env.thread_state)? 1 : 2;
     int member_th = env.rank > task.partner_using[0]? 1 : 0;
@@ -495,7 +499,7 @@ void MPI_Runner::_mpi_one_gate_inner(thread_MPI_task &task,Gate * &g)
         {
             if(pread(task.fd_using[0],&task.buffer1[0],env.chunk_size,task.fd_offset_using[0]));
             MPI_Recv(&task.buffer2[0],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-            g->run_one_qubit_mpi(&task.buffer1,&task.buffer2,0,0,1);
+            g->run_one_qubit_mpi_dio(task.buffer1,task.buffer2,0,0,1);
             MPI_Isend(&task.buffer2[0],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request[0]);
             if(pwrite(task.fd_using[0],&task.buffer1[0],env.chunk_size,task.fd_offset_using[0]));
         }
@@ -503,14 +507,19 @@ void MPI_Runner::_mpi_one_gate_inner(thread_MPI_task &task,Gate * &g)
     }
     if(pread(task.fd_using[0],&task.buffer1[0],one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
     MPI_Sendrecv(&task.buffer1[(!member_th) * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,&task.buffer2[member_th * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-    vector<complex<double>> *buffer1 = &task.buffer1;
-    vector<complex<double>> *buffer2 = &task.buffer2;
+
+    
+    //Check
+    complex<double> **buffer1 = &task.buffer1;
+    complex<double> **buffer2 = &task.buffer2;
     if(member_th) swap(buffer1,buffer2);
-    g->run_one_qubit_mpi(buffer1,buffer2,member_th * half_round_chunk,member_th * half_round_chunk,half_round_chunk);
+
+
+    g->run_one_qubit_mpi_dio(*buffer1,*buffer2,member_th * half_round_chunk,member_th * half_round_chunk,half_round_chunk);
     MPI_Sendrecv(&task.buffer2[member_th * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,&task.buffer1[(!member_th) * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     if(pwrite(task.fd_using[0],&task.buffer1[0],one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
 }
-void MPI_Runner::_thread_read2_recv2(thread_MPI_task &task,Gate * &g,int num_worker,long long stride)
+void DIO_Runner::_thread_read2_recv2(thread_DIO_task &task,Gate * &g,int num_worker,long long stride)
 {
     int member_th = env.rank > task.partner_using[0]? 1 : 0;//for rank
     int thread_member_th = isMpi(g->targs[1]) && isFile(g->targs[0]) && (task.tid & (1 << (g->targs[0] - seg.middle - seg.chunk)))? 1 : 0;//For all thread drive such as D F,otherwise it is 0
@@ -526,7 +535,7 @@ void MPI_Runner::_thread_read2_recv2(thread_MPI_task &task,Gate * &g,int num_wor
     if(pread(task.fd_using[0],&task.buffer1[(member_th << 1) * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + member_th * stride + thread_member_th * 2 * stride));
     if(pread(task.fd_using[1],&task.buffer1[((member_th << 1) | 1) * env.chunk_state],env.chunk_size,task.fd_offset_using[1] + member_th * stride + thread_member_th * 2 * stride));
     MPI_Waitall(2,&task.request[(!member_th) << 1],MPI_STATUS_IGNORE);
-    g->run(task.buffer1);
+    g->run_dio(task.buffer1);
     MPI_Isend(&task.buffer1[((!member_th) << 1) * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[0],task.tid,MPI_COMM_WORLD,&task.request[(!member_th) << 1]);
     MPI_Isend(&task.buffer1[(((!member_th) << 1) | 1) * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[1],task.tid,MPI_COMM_WORLD,&task.request[((!member_th) << 1) | 1]);
     if(num_worker == 2)
@@ -549,7 +558,7 @@ void MPI_Runner::_thread_read2_recv2(thread_MPI_task &task,Gate * &g,int num_wor
         }
     }
 }
-void MPI_Runner::_thread_read1_recv3(thread_MPI_task &task,Gate * &g,int num_worker)
+void DIO_Runner::_thread_read1_recv3(thread_DIO_task &task,Gate * &g,int num_worker)
 {
     int member_th;
     for(int i = 0;i < 4;i++)
@@ -573,7 +582,7 @@ void MPI_Runner::_thread_read1_recv3(thread_MPI_task &task,Gate * &g,int num_wor
         if(i != member_th)
             MPI_Wait(&task.request[i],MPI_STATUS_IGNORE);
     }
-    g->run(task.buffer1);
+    g->run_dio(task.buffer1);
     for(int i = 0;i < 4;i++)
         if(i != member_th) MPI_Isend(&task.buffer1[i * env.chunk_state],env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[i],task.tid,MPI_COMM_WORLD,&task.request[i]);
     if(pwrite(task.fd_using[member_th],&task.buffer1[member_th * env.chunk_state],env.chunk_size,task.fd_offset_using[member_th]));
@@ -594,7 +603,7 @@ void MPI_Runner::_thread_read1_recv3(thread_MPI_task &task,Gate * &g,int num_wor
         next_buffer_idx = Get_Next_Undone_Buffer_index(task.request,used,num_worker - 1,8);
     }
 }
-void MPI_Runner::_thread_no_exec_MPI(thread_MPI_task &task,int round)
+void DIO_Runner::_thread_no_exec_MPI(thread_DIO_task &task,int round)
 {
     vector<bool>used(round,false);
     for(int i = 0;i < round;i++)
@@ -613,24 +622,24 @@ void MPI_Runner::_thread_no_exec_MPI(thread_MPI_task &task,int round)
         next_buffer_idx = Get_Next_Undone_Buffer_index(task.request,used,round,round);
     }
 }
-void MPI_Runner::MPI_one_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
+void DIO_Runner::MPI_one_qubit_gate_diagonal(thread_DIO_task &task,Gate * &g)
 {
     long long mpi_mask = 1 << (g->targs[0] - seg.N);
     task.fd_using = {env.fd_arr[task.tid]};
     task.fd_offset_using = {0};
-    if(g->name == "Z_Gate" || g->name == "Phase_Gate")
+    if(g->name == "Z_Gate_DIO" || g->name == "Phase_Gate_DIO")
     {        
         if(env.rank != (env.rank | mpi_mask)) return;
         task.gate_buffer_using = {1};
         MPI_special_gate_inner(task,g,env.thread_size,1);
     }
-    else if(g->name == "RZ_Gate")
+    else if(g->name == "RZ_Gate_DIO")
     {
         task.gate_buffer_using = {env.rank == (env.rank | mpi_mask)};
         MPI_special_gate_inner(task,g,env.thread_size,1);
     }
 }
-void MPI_Runner::MPI_two_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
+void DIO_Runner::MPI_two_qubit_gate_diagonal(thread_DIO_task &task,Gate * &g)
 {
     long long mpi_mask1 = 1 << (g->targs[1] - seg.N);
     long long mpi_mask0 = 1 << (g->targs[0] - seg.N);
@@ -640,7 +649,7 @@ void MPI_Runner::MPI_two_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
         int rank1 = rank0 | mpi_mask0;
         int rank2 = rank0 | mpi_mask1;
         int rank3 = rank0 | mpi_mask0 | mpi_mask1;
-        if(g->name == "CPhase_Gate")
+        if(g->name == "CPhase_Gate_DIO")
         {
             if(env.rank != rank3) return;
             task.fd_using = {env.fd_arr[task.tid]};
@@ -648,7 +657,7 @@ void MPI_Runner::MPI_two_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
             task.gate_buffer_using = {3};
             MPI_special_gate_inner(task,g,env.thread_size,1);
         }
-        else if(g->name == "RZZ_Gate")
+        else if(g->name == "RZZ_Gate_DIO")
         {
             task.fd_using = {env.fd_arr[task.tid]};
             task.fd_offset_using = {0};
@@ -666,7 +675,7 @@ void MPI_Runner::MPI_two_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
     {
         long long file_mask = 1 << (g->targs[0] - seg.middle - seg.chunk);
         int partner_rank = env.rank ^ mpi_mask1;
-        if(g->name == "CPhase_Gate")
+        if(g->name == "CPhase_Gate_DIO")
         {
             if(env.rank < partner_rank) return;
             int fd1 = task.tid | file_mask;
@@ -677,7 +686,7 @@ void MPI_Runner::MPI_two_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
             task.gate_buffer_using = {3};
             MPI_special_gate_inner(task,g,env.thread_size,1);
         }
-        else if(g->name == "RZZ_Gate")
+        else if(g->name == "RZZ_Gate_DIO")
         {
             int rank_member = (env.rank > partner_rank);
             int file_member = (task.tid == (task.tid | file_mask));
@@ -690,7 +699,7 @@ void MPI_Runner::MPI_two_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
     else if(isMiddle(g->targs[0]))
     {
         int partner_rank = env.rank ^ mpi_mask1;
-        if(g->name == "CPhase_Gate")
+        if(g->name == "CPhase_Gate_DIO")
         {
             if(env.rank < partner_rank) return;
             task.fd_using = {env.fd_arr[task.tid]};
@@ -701,7 +710,7 @@ void MPI_Runner::MPI_two_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
                 MPI_special_gate_inner(task,g,env.qubit_size[g->targs[0]],1);
             }
         }
-        else if(g->name == "RZZ_Gate")
+        else if(g->name == "RZZ_Gate_DIO")
         {
             int rank_member = (env.rank > partner_rank);
             task.fd_using = {env.fd_arr[task.tid],env.fd_arr[task.tid]};
@@ -716,7 +725,7 @@ void MPI_Runner::MPI_two_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
     else
     {
         int partner_rank = env.rank ^ mpi_mask1;
-        if(g->name == "CPhase_Gate")
+        if(g->name == "CPhase_Gate_DIO")
         {
             if(env.rank < partner_rank) return;
             task.fd_using = {env.fd_arr[task.tid]};
@@ -724,7 +733,7 @@ void MPI_Runner::MPI_two_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
             task.gate_buffer_using = {1};
             MPI_special_gate_inner(task,g,env.thread_size,1);
         }
-        else if(g->name == "RZZ_Gate")
+        else if(g->name == "RZZ_Gate_DIO")
         {
             int rank_member = (env.rank > partner_rank);
             task.fd_using = {env.fd_arr[task.tid]};
@@ -734,7 +743,7 @@ void MPI_Runner::MPI_two_qubit_gate_diagonal(thread_MPI_task &task,Gate * &g)
         }
     }
 }
-int MPI_Runner::Get_Next_Undone_Buffer_index(vector<MPI_Request> &request,vector<bool>&used,int round,int start)
+int DIO_Runner::Get_Next_Undone_Buffer_index(vector<MPI_Request> &request,vector<bool>&used,int round,int start)
 {
     int res = -1;
     int fl;

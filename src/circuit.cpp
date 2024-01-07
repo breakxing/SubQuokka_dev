@@ -17,7 +17,10 @@ using namespace placeholders;
         run = bind(&gate_name::run_nonchunk, this, _1);
 
 #define bind_gate_mpi_1(gate_name)\
-    run_one_qubit_mpi = bind(&gate_name::run_mpi_chunk, this, _1,_2,_3,_4,_5);
+    run_one_qubit_mpi_io = bind(&gate_name::run_mpi_chunk, this, _1,_2,_3,_4,_5);
+
+#define bind_gate_mpi_1_dio(gate_name)\
+    run_one_qubit_mpi_dio = bind(&gate_name::run_mpi_chunk, this, _1,_2,_3,_4,_5);
 
 #define bind_gate_2(gate_name) \
     if(isChunk(targ[1]))\
@@ -28,7 +31,10 @@ using namespace placeholders;
         run = bind(&gate_name::run_nonchunk_nonchunk, this, _1);
 
 #define bind_gate_special_swap(gate_name)\
-    run_one_qubit_mpi = bind(&gate_name::run_mpi_nonchunk_chunk, this, _1,_2,_3,_4,_5);
+        run_one_qubit_mpi_io = bind(&gate_name::run_mpi_nonchunk_chunk, this, _1,_2,_3,_4,_5);
+
+#define bind_gate_special_swap_dio(gate_name)\
+    run_one_qubit_mpi_dio = bind(&gate_name::run_mpi_nonchunk_chunk, this, _1,_2,_3,_4,_5);
 
 #define bind_gate_1_dio(gate_name) \
     if(isChunk(targ[0]))\
@@ -200,25 +206,25 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer[off1] = 0.70710678118 * (q0 - q1);
 
 #define HGATEMPI \
-    q0 = (*buffer1)[off0]; q1 = (*buffer2)[off1];\
-    (*buffer1)[off0] = 0.70710678118 * (q0 + q1);\
-    (*buffer2)[off1] = 0.70710678118 * (q0 - q1);
+    q0 = buffer1[off0]; q1 = buffer2[off1];\
+    buffer1[off0] = 0.70710678118 * (q0 + q1);\
+    buffer2[off1] = 0.70710678118 * (q0 - q1);
 
 #define XGATE \
     q0 = buffer[off0]; q1 = buffer[off1];\
     buffer[off0] = q1; buffer[off1] = q0;
 
 #define XGATEMPI \
-    q0 = (*buffer1)[off0]; q1 = (*buffer2)[off1];\
-    (*buffer1)[off0] = q1; (*buffer2)[off1] = q0;
+    q0 = buffer1[off0]; q1 = buffer2[off1];\
+    buffer1[off0] = q1; buffer2[off1] = q0;
 
 #define YGATE \
     q0 = buffer[off0]; q1 = buffer[off1];\
     buffer[off0] = q1 * (-1i); buffer[off1] = q0 * 1i;
 
 #define YGATEMPI \
-    q0 = (*buffer1)[off0]; q1 = (*buffer2)[off1];\
-    (*buffer1)[off0] = q1 * (-1i); (*buffer2)[off1] = q0 * 1i;
+    q0 = buffer1[off0]; q1 = buffer2[off1];\
+    buffer1[off0] = q1 * (-1i); buffer2[off1] = q0 * 1i;
 
 #define ZGATE \
     buffer[off0] *= -1;
@@ -229,9 +235,9 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer[off1] = coeff[2] * q0 + coeff[3] * q1;
 
 #define U1GATEMPI \
-    q0 = (*buffer1)[off0]; q1 = (*buffer2)[off1];\
-    (*buffer1)[off0] = coeff[0] * q0 + coeff[1] * q1;\
-    (*buffer2)[off0] = coeff[2] * q0 + coeff[3] * q1;
+    q0 = buffer1[off0]; q1 = buffer2[off1];\
+    buffer1[off0] = coeff[0] * q0 + coeff[1] * q1;\
+    buffer2[off0] = coeff[2] * q0 + coeff[3] * q1;
 
 #define PGATE \
     buffer[off0] *= phi;
@@ -242,9 +248,9 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer[off1] = q0 * i_sin_Phi_2 + q1 * cos_Phi_2;
 
 #define RXGATEMPI \
-    q0 = (*buffer1)[off0]; q1 = (*buffer2)[off1];\
-    (*buffer1)[off0] = q0 * cos_Phi_2 + q1 * i_sin_Phi_2;\
-    (*buffer2)[off1] = q0 * i_sin_Phi_2 + q1 * cos_Phi_2;
+    q0 = buffer1[off0]; q1 = buffer2[off1];\
+    buffer1[off0] = q0 * cos_Phi_2 + q1 * i_sin_Phi_2;\
+    buffer2[off1] = q0 * i_sin_Phi_2 + q1 * cos_Phi_2;
 
 #define RYGATE \
     q0 = buffer[off0]; q1 = buffer[off1];\
@@ -252,17 +258,17 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer[off1] = q0 * sin_Phi_2 + q1 * cos_Phi_2;
 
 #define RYGATEMPI \
-    q0 = (*buffer1)[off0]; q1 = (*buffer2)[off1];\
-    (*buffer1)[off0] = q0 * cos_Phi_2 - q1 * sin_Phi_2;\
-    (*buffer2)[off1] = q0 * sin_Phi_2 + q1 * cos_Phi_2;
+    q0 = buffer1[off0]; q1 = buffer2[off1];\
+    buffer1[off0] = q0 * cos_Phi_2 - q1 * sin_Phi_2;\
+    buffer2[off1] = q0 * sin_Phi_2 + q1 * cos_Phi_2;
 
 #define RZGATE \
     buffer[off0] *= exp_n_iPhi_2;\
     buffer[off1] *= exp_p_iPhi_2;
 
 #define RZGATEMPI \
-    (*buffer1)[off0] *= exp_n_iPhi_2;\
-    (*buffer2)[off1] *= exp_p_iPhi_2;
+    buffer1[off0] *= exp_n_iPhi_2;\
+    buffer2[off1] *= exp_p_iPhi_2;
 
 #define U2Gate \
     q0 = buffer[off0];\
@@ -275,14 +281,14 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer[off3] = coeff[12] * q0 + coeff[13] * q1 + coeff[14] * q2 + coeff[15] * q3;
 
 #define U2MPICHUNK \
-    q0 = (*buffer1)[off0];\
-    q1 = (*buffer1)[off1];\
-    q2 = (*buffer2)[off2];\
-    q3 = (*buffer2)[off3];\
-    (*buffer1)[off0] = coeff[ 0] * q0 + coeff[ 1] * q1 + coeff[ 2] * q2 + coeff[ 3] * q3;\
-    (*buffer1)[off1] = coeff[ 4] * q0 + coeff[ 5] * q1 + coeff[ 6] * q2 + coeff[ 7] * q3;\
-    (*buffer2)[off2] = coeff[ 8] * q0 + coeff[ 9] * q1 + coeff[10] * q2 + coeff[11] * q3;\
-    (*buffer2)[off3] = coeff[12] * q0 + coeff[13] * q1 + coeff[14] * q2 + coeff[15] * q3;
+    q0 = buffer1[off0];\
+    q1 = buffer1[off1];\
+    q2 = buffer2[off2];\
+    q3 = buffer2[off3];\
+    buffer1[off0] = coeff[ 0] * q0 + coeff[ 1] * q1 + coeff[ 2] * q2 + coeff[ 3] * q3;\
+    buffer1[off1] = coeff[ 4] * q0 + coeff[ 5] * q1 + coeff[ 6] * q2 + coeff[ 7] * q3;\
+    buffer2[off2] = coeff[ 8] * q0 + coeff[ 9] * q1 + coeff[10] * q2 + coeff[11] * q3;\
+    buffer2[off3] = coeff[12] * q0 + coeff[13] * q1 + coeff[14] * q2 + coeff[15] * q3;
 
 #define SWAPGate \
     q0 = buffer[off0];\
@@ -291,9 +297,9 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer[off1] = q0;
 
 #define SWAPGateMPIChunk \
-    q0 = (*buffer1)[off0]; q1 = (*buffer2)[off1];\
-    (*buffer1)[off0] = q1;\
-    (*buffer2)[off1] = q0;
+    q0 = buffer1[off0]; q1 = buffer2[off1];\
+    buffer1[off0] = q1;\
+    buffer2[off1] = q0;
 
 #define CPGATE \
     buffer[off0] *= exp_iPhi;
@@ -354,7 +360,7 @@ void H_Gate::run_nonchunk(vector<complex<double>> &buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), HGATE)
 }
 
-void H_Gate::run_mpi_chunk(vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int offset0,int offset1,int round){
+void H_Gate::run_mpi_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,int offset0,int offset1,int round){
     mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), HGATEMPI)
 }
 
@@ -378,7 +384,7 @@ void X_Gate::run_nonchunk(vector<complex<double>> &buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), XGATE)
 }
 
-void X_Gate::run_mpi_chunk(vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int offset0,int offset1,int round){
+void X_Gate::run_mpi_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,int offset0,int offset1,int round){
     mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), XGATEMPI)
 }
 
@@ -402,7 +408,7 @@ void Y_Gate::run_nonchunk(vector<complex<double>> &buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), YGATE)
 }
 
-void Y_Gate::run_mpi_chunk(vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int offset0,int offset1,int round){
+void Y_Gate::run_mpi_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,int offset0,int offset1,int round){
     mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), YGATEMPI)
 }
 
@@ -440,7 +446,7 @@ void U1_Gate::run_nonchunk(vector<complex<double>> &buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), U1GATE)
 }
 
-void U1_Gate::run_mpi_chunk(vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int offset0,int offset1,int round){
+void U1_Gate::run_mpi_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,int offset0,int offset1,int round){
     mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), U1GATEMPI)
 }
 
@@ -477,7 +483,7 @@ void RX_Gate::run_nonchunk(vector<complex<double>> &buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), RXGATE)
 }
 
-void RX_Gate::run_mpi_chunk(vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int offset0,int offset1,int round){
+void RX_Gate::run_mpi_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,int offset0,int offset1,int round){
     mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), RXGATEMPI)
 }
 
@@ -501,7 +507,7 @@ void RY_Gate::run_nonchunk(vector<complex<double>> &buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), RYGATE)
 }
 
-void RY_Gate::run_mpi_chunk(vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int offset0,int offset1,int round){
+void RY_Gate::run_mpi_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,int offset0,int offset1,int round){
     mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), RYGATEMPI)
 }
 
@@ -582,7 +588,7 @@ void U2_Gate::run_nonchunk_nonchunk(vector<complex<double>> &buffer){
                     U2Gate)
 }
 
-void U2_Gate::run_mpi_chunk(vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int offset0,int offset1,int round){
+void U2_Gate::run_mpi_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,int offset0,int offset1,int round){
     mpi_nonchunk_chunk(init_off4(int,offset0 * env.chunk_state,offset0 * env.chunk_state + half_off_0,offset1 * env.chunk_state, offset1 * env.chunk_state + half_off_0),
                     round,
                     update_off4(1),
@@ -623,7 +629,7 @@ void SWAP_Gate::run_nonchunk_nonchunk(vector<complex<double>> &buffer){
                     SWAPGate)
 }
 
-void SWAP_Gate::run_mpi_nonchunk_chunk(vector<complex<double>>*buffer1,vector<complex<double>>*buffer2,int offset0,int offset1,int round){
+void SWAP_Gate::run_mpi_nonchunk_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,int offset0,int offset1,int round){
     mpi_nonchunk_chunk(init_off2(int, offset0 * env.chunk_state + half_off_0, offset1 * env.chunk_state),round, update_off2(1),update_off2(half_off_0),SWAPGateMPIChunk)
 }
 
@@ -632,9 +638,9 @@ VSWAP_Gate_1_1::VSWAP_Gate_1_1(vector<int> targ): SWAP_Gate(targ) {
     name = "VSWAP_Gate_1_1";
 }
 
-MPI_VSWAP_Gate_1_1::MPI_VSWAP_Gate_1_1(vector<int> targ): SWAP_Gate(targ) {
+MPI_VSWAP_Gate_1_1_IO::MPI_VSWAP_Gate_1_1_IO(vector<int> targ): SWAP_Gate(targ) {
     type = VSWAP;
-    name = "MPI_VSWAP_Gate_1_1";
+    name = "MPI_VSWAP_Gate_1_1_IO";
 }
 
 
@@ -1021,9 +1027,9 @@ VSWAP_Gate_2_2::VSWAP_Gate_2_2(vector<int> targ): Gate(targ) {
     run = bind(&VSWAP_Gate_2_2::run_nonchunk_chunk, this, _1);
 }
 
-MPI_VSWAP_Gate_2_2::MPI_VSWAP_Gate_2_2(vector<int> targ): Gate(targ) {
+MPI_VSWAP_Gate_2_2_IO::MPI_VSWAP_Gate_2_2_IO(vector<int> targ): Gate(targ) {
     type = VSWAP;
-    name = "MPI_VSWAP_Gate_2_2";
+    name = "MPI_VSWAP_Gate_2_2_IO";
     half_off_0 = env.qubit_offset[targ[0]];
     half_off_1 = env.qubit_offset[targ[1]];
     half_off_2 = 0;
@@ -1033,10 +1039,10 @@ MPI_VSWAP_Gate_2_2::MPI_VSWAP_Gate_2_2(vector<int> targ): Gate(targ) {
     off_1 = half_off_1 * 2;
     off_2 = half_off_2 * 2;
     off_3 = half_off_3 * 2;
-    run_mpi_vswap2_2 = bind(&MPI_VSWAP_Gate_2_2::run_vswap_2_2,this,_1,_2,_3,_4,_5);
+    run_mpi_vswap2_2_io = bind(&MPI_VSWAP_Gate_2_2_IO::run_vswap_2_2,this,_1,_2,_3,_4,_5);
 }
 
-void MPI_VSWAP_Gate_2_2::run_vswap_2_2(vector<complex<double>> *buffer1,vector<complex<double>> *buffer2,vector<complex<double>> *buffer3,vector<complex<double>> *buffer4,int round)
+void MPI_VSWAP_Gate_2_2_IO::run_vswap_2_2(vector<complex<double>> &buffer1,vector<complex<double>> &buffer2,vector<complex<double>> &buffer3,vector<complex<double>> &buffer4,int round)
 {
     int off0001 = half_off_0;
     int off0010 = half_off_1;
@@ -1067,30 +1073,30 @@ void MPI_VSWAP_Gate_2_2::run_vswap_2_2(vector<complex<double>> *buffer1,vector<c
     for (int i = 0; i < round * env.chunk_state; i += off_1) {
         for (int j = 0; j < half_off_1; j += off_0) {
             for (int k = 0; k < half_off_0; k++) {
-                q0001 = (*buffer1)[off0001];
-                q0010 = (*buffer1)[off0010];
-                q0011 = (*buffer1)[off0011];
-                q0100 = (*buffer2)[off0100];
-                q0110 = (*buffer2)[off0110];
-                q0111 = (*buffer2)[off0111];
-                q1000 = (*buffer3)[off1000];
-                q1001 = (*buffer3)[off1001];
-                q1011 = (*buffer3)[off1011];
-                q1100 = (*buffer4)[off1100];
-                q1101 = (*buffer4)[off1101];
-                q1110 = (*buffer4)[off1110];
-                (*buffer1)[off0001] = q0100;
-                (*buffer1)[off0010] = q1000;
-                (*buffer1)[off0011] = q1100;
-                (*buffer2)[off0100] = q0001;
-                (*buffer2)[off0110] = q1001;
-                (*buffer2)[off0111] = q1101;
-                (*buffer3)[off1000] = q0010;
-                (*buffer3)[off1001] = q0110;
-                (*buffer3)[off1011] = q1110;
-                (*buffer4)[off1100] = q0011;
-                (*buffer4)[off1101] = q0111;
-                (*buffer4)[off1110] = q1011;
+                q0001 = buffer1[off0001];
+                q0010 = buffer1[off0010];
+                q0011 = buffer1[off0011];
+                q0100 = buffer2[off0100];
+                q0110 = buffer2[off0110];
+                q0111 = buffer2[off0111];
+                q1000 = buffer3[off1000];
+                q1001 = buffer3[off1001];
+                q1011 = buffer3[off1011];
+                q1100 = buffer4[off1100];
+                q1101 = buffer4[off1101];
+                q1110 = buffer4[off1110];
+                buffer1[off0001] = q0100;
+                buffer1[off0010] = q1000;
+                buffer1[off0011] = q1100;
+                buffer2[off0100] = q0001;
+                buffer2[off0110] = q1001;
+                buffer2[off0111] = q1101;
+                buffer3[off1000] = q0010;
+                buffer3[off1001] = q0110;
+                buffer3[off1011] = q1110;
+                buffer4[off1100] = q0011;
+                buffer4[off1101] = q0111;
+                buffer4[off1110] = q1011;
                 off0001++;
                 off0010++;
                 off0011++;
@@ -1885,7 +1891,14 @@ void VSWAP_Gate_6_6::run_nonchunk_chunk(vector<complex<double>> &buffer){
 /*-----ONE_QUBIT_GATE-----*/
 H_Gate_DIO::H_Gate_DIO(vector<int> targ): ONE_QUBIT_GATE(targ) {
     name = "H_Gate_DIO";
-    bind_gate_1_dio(H_Gate_DIO)
+    if(mpi_count)
+    {
+        bind_gate_mpi_1_dio(H_Gate_DIO)
+    }
+    else
+    {
+        bind_gate_1_dio(H_Gate_DIO)
+    }
 }
 
 void H_Gate_DIO::run_chunk(complex<double> *buffer){
@@ -1896,9 +1909,20 @@ void H_Gate_DIO::run_nonchunk(complex<double> *buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), HGATE)
 }
 
+void H_Gate_DIO::run_mpi_chunk(complex<double> *buffer1,complex<double> *buffer2,int offset0,int offset1,int round){
+    mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), HGATEMPI)
+}
+
 X_Gate_DIO::X_Gate_DIO(vector<int> targ): ONE_QUBIT_GATE(targ) {
     name = "X_Gate_DIO";
-    bind_gate_1_dio(X_Gate_DIO)
+    if(mpi_count)
+    {
+        bind_gate_mpi_1_dio(X_Gate_DIO)
+    }
+    else
+    {
+        bind_gate_1_dio(X_Gate_DIO)
+    }
 }
 
 void X_Gate_DIO::run_chunk(complex<double> *buffer){
@@ -1909,9 +1933,20 @@ void X_Gate_DIO::run_nonchunk(complex<double> *buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), XGATE)
 }
 
+void X_Gate_DIO::run_mpi_chunk(complex<double> *buffer1,complex<double> *buffer2,int offset0,int offset1,int round){
+    mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), XGATEMPI)
+}
+
 Y_Gate_DIO::Y_Gate_DIO(vector<int> targ): ONE_QUBIT_GATE(targ) {
     name = "Y_Gate_DIO";
-    bind_gate_1_dio(Y_Gate_DIO)
+    if(mpi_count)
+    {
+        bind_gate_mpi_1_dio(Y_Gate_DIO)
+    }
+    else
+    {
+        bind_gate_1_dio(Y_Gate_DIO)
+    }
 }
 
 void Y_Gate_DIO::run_chunk(complex<double> *buffer){
@@ -1920,6 +1955,10 @@ void Y_Gate_DIO::run_chunk(complex<double> *buffer){
 
 void Y_Gate_DIO::run_nonchunk(complex<double> *buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), YGATE)
+}
+
+void Y_Gate_DIO::run_mpi_chunk(complex<double> *buffer1,complex<double> *buffer2,int offset0,int offset1,int round){
+    mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), YGATEMPI)
 }
 
 Z_Gate_DIO::Z_Gate_DIO(vector<int> targ): ONE_QUBIT_GATE(targ) {
@@ -1937,7 +1976,14 @@ void Z_Gate_DIO::run_nonchunk(complex<double> *buffer){
 
 U1_Gate_DIO::U1_Gate_DIO(vector<int> targ, vector<complex<double>> coeff): ONE_QUBIT_GATE(targ), coeff(coeff) {
     name = "U1_Gate_DIO";
-    bind_gate_1_dio(U1_Gate_DIO)
+    if(mpi_count)
+    {
+        bind_gate_mpi_1_dio(U1_Gate_DIO)
+    }
+    else
+    {
+        bind_gate_1_dio(U1_Gate_DIO)
+    }
 }
 
 void U1_Gate_DIO::run_chunk(complex<double> *buffer){
@@ -1946,6 +1992,10 @@ void U1_Gate_DIO::run_chunk(complex<double> *buffer){
 
 void U1_Gate_DIO::run_nonchunk(complex<double> *buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), U1GATE)
+}
+
+void U1_Gate_DIO::run_mpi_chunk(complex<double> *buffer1,complex<double> *buffer2,int offset0,int offset1,int round){
+    mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), U1GATEMPI)
 }
 
 Phase_Gate_DIO::Phase_Gate_DIO(vector<int> targ, double phi): ONE_QUBIT_GATE(targ), phi(cos(phi), sin(phi)) {
@@ -1963,7 +2013,14 @@ void Phase_Gate_DIO::run_nonchunk(complex<double> *buffer){
 
 RX_Gate_DIO::RX_Gate_DIO(vector<int> targ, double phi): ONE_QUBIT_GATE(targ), cos_Phi_2(cos(phi/2), 0), i_sin_Phi_2(0, -sin(phi/2)) {
     name = "RX_Gate_DIO";
-    bind_gate_1_dio(RX_Gate_DIO)
+    if(mpi_count)
+    {
+        bind_gate_mpi_1_dio(RX_Gate_DIO)
+    }
+    else
+    {
+        bind_gate_1_dio(RX_Gate_DIO)
+    }
 }
 
 void RX_Gate_DIO::run_chunk(complex<double> *buffer){
@@ -1974,9 +2031,20 @@ void RX_Gate_DIO::run_nonchunk(complex<double> *buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), RXGATE)
 }
 
+void RX_Gate_DIO::run_mpi_chunk(complex<double> *buffer1,complex<double> *buffer2,int offset0,int offset1,int round){
+    mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), RXGATEMPI)
+}
+
 RY_Gate_DIO::RY_Gate_DIO(vector<int> targ, double phi): ONE_QUBIT_GATE(targ), cos_Phi_2(cos(phi/2), 0), sin_Phi_2(sin(phi/2), 0) {
     name = "RY_Gate_DIO";
-    bind_gate_1_dio(RY_Gate_DIO)
+    if(mpi_count)
+    {
+        bind_gate_mpi_1_dio(RY_Gate_DIO)
+    }
+    else
+    {
+        bind_gate_1_dio(RY_Gate_DIO)
+    }
 }
 
 void RY_Gate_DIO::run_chunk(complex<double> *buffer){
@@ -1985,6 +2053,10 @@ void RY_Gate_DIO::run_chunk(complex<double> *buffer){
 
 void RY_Gate_DIO::run_nonchunk(complex<double> *buffer){
     nonchunk_gate(init_off2(int, 0, half_off), update_off2(1), RYGATE)
+}
+
+void RY_Gate_DIO::run_mpi_chunk(complex<double> *buffer1,complex<double> *buffer2,int offset0,int offset1,int round){
+    mpi_gate(init_off2(int, offset0 * env.chunk_state, offset1 * env.chunk_state),round, update_off2(1), RYGATEMPI)
 }
 
 RZ_Gate_DIO::RZ_Gate_DIO(vector<int> targ, double phi): ONE_QUBIT_GATE(targ), exp_p_iPhi_2(cos(phi/2), sin(phi/2)), exp_n_iPhi_2(cos(-phi/2), sin(-phi/2)) {
@@ -2005,19 +2077,24 @@ void RZ_Gate_DIO::run_nonchunk(complex<double> *buffer){
 U2_Gate_DIO::U2_Gate_DIO(vector<int> targ, vector<complex<double>> matrix): TWO_QUBIT_GATE(targ){
     name = "U2_Gate_DIO";
 
-    if (targ[0] > targ[1]){
-        for (int i = 0; i < 16; i++) {
-            int res = 0;
-            int b1 = i & 1;
-            int b2 = (i >> 1) & 1;
-            int b3 = (i >> 2) & 1;
-            int b4 = (i >> 3) & 1;
-            res = (b3 << 3) | (b4 << 2) | (b1 << 1) | b2;
-            coeff[i] = matrix[res];
-        }
+    assert(targ[0] < targ[1]);
+    for (int i = 0; i < 16; i++) {
+        int res = 0;
+        int b1 = i & 1;
+        int b2 = (i >> 1) & 1;
+        int b3 = (i >> 2) & 1;
+        int b4 = (i >> 3) & 1;
+        res = (b3 << 3) | (b4 << 2) | (b1 << 1) | b2;
+        coeff[i] = matrix[res];
     }
-
-    bind_gate_2_dio(U2_Gate_DIO)
+    if(mpi_count == 1 && chunk_count == 1)
+    {
+        bind_gate_mpi_1_dio(U2_Gate_DIO)
+    }
+    else
+    {
+        bind_gate_2_dio(U2_Gate_DIO)
+    }
 }
 
 void U2_Gate_DIO::run_chunk_chunk(complex<double> *buffer){
@@ -2041,9 +2118,29 @@ void U2_Gate_DIO::run_nonchunk_nonchunk(complex<double> *buffer){
                     U2Gate)
 }
 
+void U2_Gate_DIO::run_mpi_chunk(complex<double>*buffer1,complex<double>*buffer2,int offset0,int offset1,int round){
+    mpi_nonchunk_chunk(init_off4(int,offset0 * env.chunk_state,offset0 * env.chunk_state + half_off_0,offset1 * env.chunk_state, offset1 * env.chunk_state + half_off_0),
+                    round,
+                    update_off4(1),
+                    update_off4(half_off_0),
+                    U2MPICHUNK)
+}
+
 SWAP_Gate_DIO::SWAP_Gate_DIO(vector<int> targ): TWO_QUBIT_GATE(targ) {
     name = "SWAP_Gate_DIO";
-    bind_gate_2_dio(SWAP_Gate_DIO)
+    if(mpi_count == 1 && chunk_count == 1)
+    {
+        bind_gate_special_swap_dio(SWAP_Gate_DIO)
+    }
+    else
+    {
+        bind_gate_2_dio(SWAP_Gate_DIO)
+    }
+}
+
+MPI_VSWAP_Gate_1_1_DIO::MPI_VSWAP_Gate_1_1_DIO(vector<int> targ): SWAP_Gate_DIO(targ) {
+    type = VSWAP;
+    name = "MPI_VSWAP_Gate_1_1_DIO";
 }
 
 void SWAP_Gate_DIO::run_chunk_chunk(complex<double> *buffer){
@@ -2065,6 +2162,10 @@ void SWAP_Gate_DIO::run_nonchunk_nonchunk(complex<double> *buffer){
     nonchunk_nonchunk_gate(init_off2(int, half_off_0, half_off_1),
                     update_off2(1), 
                     SWAPGate)
+}
+
+void SWAP_Gate_DIO::run_mpi_nonchunk_chunk(complex<double>*buffer1,complex<double>*buffer2,int offset0,int offset1,int round){
+    mpi_nonchunk_chunk(init_off2(int, offset0 * env.chunk_state + half_off_0, offset1 * env.chunk_state),round, update_off2(1),update_off2(half_off_0),SWAPGateMPIChunk)
 }
 
 VSWAP_Gate_1_1_DIO::VSWAP_Gate_1_1_DIO(vector<int> targ): SWAP_Gate_DIO(targ) {
@@ -2198,6 +2299,117 @@ void VSWAP_Gate_2_2_DIO::run_nonchunk_chunk(complex<double> *buffer){
                 buffer[off1100] = q0011;
                 buffer[off1101] = q0111;
                 buffer[off1110] = q1011;
+                off0001++;
+                off0010++;
+                off0011++;
+                off0100++;
+                off0110++;
+                off0111++;
+                off1000++;
+                off1001++;
+                off1011++;
+                off1100++;
+                off1101++;
+                off1110++;
+            }
+            off0001 += half_off_0;
+            off0010 += half_off_0;
+            off0011 += half_off_0;
+            off0100 += half_off_0;
+            off0110 += half_off_0;
+            off0111 += half_off_0;
+            off1000 += half_off_0;
+            off1001 += half_off_0;
+            off1011 += half_off_0;
+            off1100 += half_off_0;
+            off1101 += half_off_0;
+            off1110 += half_off_0;
+        }
+        off0001 += half_off_1;
+        off0010 += half_off_1;
+        off0011 += half_off_1;
+        off0100 += half_off_1;
+        off0110 += half_off_1;
+        off0111 += half_off_1;
+        off1000 += half_off_1;
+        off1001 += half_off_1;
+        off1011 += half_off_1;
+        off1100 += half_off_1;
+        off1101 += half_off_1;
+        off1110 += half_off_1;
+    }
+}
+
+MPI_VSWAP_Gate_2_2_DIO::MPI_VSWAP_Gate_2_2_DIO(vector<int> targ): Gate(targ) {
+    type = VSWAP;
+    name = "MPI_VSWAP_Gate_2_2_DIO";
+    half_off_0 = env.qubit_offset[targ[0]];
+    half_off_1 = env.qubit_offset[targ[1]];
+    half_off_2 = 0;
+    half_off_3 = 0;
+        
+    off_0 = half_off_0 * 2;
+    off_1 = half_off_1 * 2;
+    off_2 = half_off_2 * 2;
+    off_3 = half_off_3 * 2;
+    run_mpi_vswap2_2_dio = bind(&MPI_VSWAP_Gate_2_2_DIO::run_vswap_2_2,this,_1,_2,_3,_4,_5);
+}
+
+void MPI_VSWAP_Gate_2_2_DIO::run_vswap_2_2(complex<double> *buffer1,complex<double> *buffer2,complex<double> *buffer3,complex<double> *buffer4,int round)
+{
+    int off0001 = half_off_0;
+    int off0010 = half_off_1;
+    int off0011 = half_off_0 + half_off_1;
+    int off0100 = half_off_2;
+    int off0110 = half_off_1 + half_off_2;
+    int off0111 = half_off_0 + half_off_1 + half_off_2;
+    int off1000 = half_off_3;
+    int off1001 = half_off_0 + half_off_3;
+    int off1011 = half_off_0 + half_off_1 + half_off_3;
+    int off1100 = half_off_2 + half_off_3;
+    int off1101 = half_off_0 + half_off_2 + half_off_3;
+    int off1110 = half_off_1 + half_off_2 + half_off_3;
+
+    complex<double> q0001;
+    complex<double> q0010;
+    complex<double> q0011;
+    complex<double> q0100;
+    complex<double> q0110;
+    complex<double> q0111;
+    complex<double> q1000;
+    complex<double> q1001;
+    complex<double> q1011;
+    complex<double> q1100;
+    complex<double> q1101;
+    complex<double> q1110;
+
+    for (int i = 0; i < round * env.chunk_state; i += off_1) {
+        for (int j = 0; j < half_off_1; j += off_0) {
+            for (int k = 0; k < half_off_0; k++) {
+                q0001 = buffer1[off0001];
+                q0010 = buffer1[off0010];
+                q0011 = buffer1[off0011];
+                q0100 = buffer2[off0100];
+                q0110 = buffer2[off0110];
+                q0111 = buffer2[off0111];
+                q1000 = buffer3[off1000];
+                q1001 = buffer3[off1001];
+                q1011 = buffer3[off1011];
+                q1100 = buffer4[off1100];
+                q1101 = buffer4[off1101];
+                q1110 = buffer4[off1110];
+                buffer1[off0001] = q0100;
+                buffer1[off0010] = q1000;
+                buffer1[off0011] = q1100;
+                buffer2[off0100] = q0001;
+                buffer2[off0110] = q1001;
+                buffer2[off0111] = q1101;
+                buffer3[off1000] = q0010;
+                buffer3[off1001] = q0110;
+                buffer3[off1011] = q1110;
+                buffer4[off1100] = q0011;
+                buffer4[off1101] = q0111;
+                buffer4[off1110] = q1011;
                 off0001++;
                 off0010++;
                 off0011++;

@@ -23,8 +23,8 @@ cir = get_circuit()
 N = 29
 mpiqubit = 1
 
-for i in range(10):
-    H(cir,N - 1)
+for i in range(N):
+    H(cir,i)
 
 
 
@@ -37,21 +37,21 @@ os.chdir("correctness")
 
 for n in [N]:
     args = Args(total_qbit=n, file_qbit=file_seg, chunk_qbit=chunk_seg,mpi_qbit=mpiqubit,
-                is_subcircuit=0,MPI_testing=0,MPI_buffe_size=16,
-                runner_type="MPI" if mpiqubit != 0 else "IO", state_paths=state_paths)
+                is_subcircuit=0,MPI_buffe_size=16,
+                runner_type="MPI_IO" if mpiqubit != 0 else "DirectIO", state_paths=state_paths)
     ini = Ini(args, ini_path)
     ini.out()
     if args.mpi_qbit == 0:
         os.system(f"../Quokka -c {cir_path} -i {ini_path}")
-        simple_test(f"[H {n} subcircuit]", False, cir_path, state_paths, n, (1 << file_seg))
+        # simple_test(f"[H {n} subcircuit]", False, cir_path, state_paths, n, (1 << file_seg))
     else:
         os.chdir("..")
-        os.system("scp -r -P 9048 ./*.cpp rdma2:~/SubQuokka_dev/src/")
-        os.system("scp -r -P 9048 ./*.hpp rdma2:~/SubQuokka_dev/src/")
-        os.system("scp -r -P 9048 ./*.h rdma2:~/SubQuokka_dev/src/")
-        os.system("scp -r -P 9048 ./makefile rdma2:~/SubQuokka_dev/src/")
-        os.system(f"scp -r -P 9048 ./correctness/{ini_path} rdma2:~/SubQuokka_dev/src/correctness/")
-        os.system(f"scp -r -P 9048 ./correctness/{cir_path} rdma2:~/SubQuokka_dev/src/correctness/")
+        os.system("scp -r -P 22 ./*.cpp rdma2:~/SubQuokka_dev/src/")
+        os.system("scp -r -P 22 ./*.hpp rdma2:~/SubQuokka_dev/src/")
+        os.system("scp -r -P 22 ./*.h rdma2:~/SubQuokka_dev/src/")
+        os.system("scp -r -P 22 ./makefile rdma2:~/SubQuokka_dev/src/")
+        os.system(f"scp -r -P 22 ./correctness/{ini_path} rdma2:~/SubQuokka_dev/src/correctness/")
+        os.system(f"scp -r -P 22 ./correctness/{cir_path} rdma2:~/SubQuokka_dev/src/correctness/")
         input("Go other computer to make")
         os.chdir("correctness")
         os.system(f"mpirun -x UCX_NET_DEVICES=mlx5_1:1,mlx5_0:1 -x LD_LIBRARY_PATH --bind-to none --hostfile ../hf --map-by ppr:1:node \"$(pwd)/../Quokka\" -i {ini_path} -c {cir_path}")

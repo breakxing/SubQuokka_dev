@@ -5,7 +5,7 @@ CXX = mpiCC
 CXXFLAGS = -g -O3 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -lm -fopenmp -Wall -Werror 
 
 # Source files
-SRCS = main.cpp circuit.cpp common.cpp ini.cpp INIReader.cpp simulator.cpp IO_Runner.cpp DIO_Runner.cpp MEM_Runner.cpp MPI_Runner.cpp MPI_Func.cpp
+SRCS = main.cpp circuit.cpp common.cpp ini.cpp INIReader.cpp simulator.cpp IO_Runner.cpp DIO_Runner.cpp MEM_Runner.cpp MPI_IO_Func.cpp MPI_DIO_Func.cpp
 # Object files
 OBJS = $(SRCS:.cpp=.o)
 
