@@ -70,7 +70,7 @@ inline int file_exists(string state_path) {
 
 inline void create_file(string state_path) {
     int fd;
-    if (env.runner_type == "DirectIO") {
+    if (env.runner_type == "DirectIO" || env.runner_type == "MPI_DIO") {
         fd = open(state_path.c_str(), O_RDWR | O_CREAT | O_DIRECT, 0666);
     }
     else {
