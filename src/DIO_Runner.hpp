@@ -21,6 +21,11 @@ public:
     std::vector<int>gate_buffer_using;
     bool has_non_blocking;
     // std::vector<std::vector<Gate>> subcircuits;
+
+    double MPI_gate_time;
+    double pure_IO_gate_time;
+    int MPI_gate_count;
+    int pure_IO_gate_count;
     thread_DIO_task()=default;
     thread_DIO_task(int,int);
 };

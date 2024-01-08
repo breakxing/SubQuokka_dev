@@ -640,7 +640,10 @@ void Simulator::run() {
         Runner->run(circuit);
     
     double end = omp_get_wtime();
-    std::cout << end - start << "s" << std::endl;
+    if(env.is_MPI)
+        printf("Rank %d: %lfs\n",env.rank,end - start);
+    else
+        std::cout << end - start << "s" << std::endl;
 
     // if(checkValue(((MEM_Runner *)Runner)->buffer))
     //     cout << "[Check value]: all entries the same, " << ((MEM_Runner *)Runner)->buffer[0] << endl;

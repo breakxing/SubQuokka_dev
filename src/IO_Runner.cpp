@@ -312,6 +312,10 @@ void IO_Runner::run(vector<Gate *> &circuit) {
         int tid = omp_get_thread_num();
         auto task = thread_tasks[tid];
         task.tid = tid;
+        task.MPI_gate_count = 0;
+        task.MPI_gate_time = 0;
+        task.pure_IO_gate_count = 0;
+        task.pure_IO_gate_time = 0;
         // static int count = 0;
         for (auto &g : circuit) {
             // if(tid == 0)
@@ -322,6 +326,7 @@ void IO_Runner::run(vector<Gate *> &circuit) {
             int file_count = g->file_count;
             int middle_count = g->middle_count;
             int chunk_count = g->chunk_count;
+            double t_start = omp_get_wtime();
             if(mpi_count == 0)
             {
                 if(file_count != 0 && g->type != THREE_QUBIT)
@@ -358,6 +363,17 @@ void IO_Runner::run(vector<Gate *> &circuit) {
             }
             else
                 exit(-1);
+            double t_end = omp_get_wtime();
+            if(mpi_count)
+            {
+                task.MPI_gate_count++;
+                task.MPI_gate_time+=t_end - t_start;
+            }
+            else
+            {
+                task.pure_IO_gate_count++;
+                task.pure_IO_gate_time+=t_end - t_start;
+            }
             #pragma omp barrier
             if(task.has_non_blocking)
             {
@@ -367,6 +383,12 @@ void IO_Runner::run(vector<Gate *> &circuit) {
             }
         }
         #pragma omp barrier
+        if(task.tid == 0)
+        {
+            const char* ip = env.rank?"42":"48";
+            printf("%s takes %lfs to execute %d IO gate. Average %lfs\n",ip,task.pure_IO_gate_time,task.pure_IO_gate_count,task.pure_IO_gate_time / task.pure_IO_gate_count);
+            printf("%s takes %lfs to execute %d MPI gate. Average %lfs\n",ip,task.MPI_gate_time,task.MPI_gate_count,task.MPI_gate_time / task.MPI_gate_count);
+        }
     }
 }
 
