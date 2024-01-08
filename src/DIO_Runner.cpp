@@ -332,6 +332,10 @@ void DIO_Runner::run(vector<Gate *> &circuit) {
             int middle_count = g->middle_count;
             int chunk_count = g->chunk_count;
             double t_start = omp_get_wtime();
+            if(file_count)
+            {
+                #pragma omp barrier
+            }
             if(mpi_count == 0)
             {
                 if(file_count != 0 && g->type != THREE_QUBIT)
@@ -379,7 +383,10 @@ void DIO_Runner::run(vector<Gate *> &circuit) {
                 task.pure_IO_gate_count++;
                 task.pure_IO_gate_time+=t_end - t_start;
             }
-            #pragma omp barrier
+            if(file_count)
+            {
+                #pragma omp barrier
+            }
             if(task.has_non_blocking)
             {
                 #pragma omp master
@@ -411,6 +418,10 @@ void DIO_Runner::run(vector<vector<Gate *>> &subcircuits) {
                 int file_count = subcircuit[0]->file_count;
                 int middle_count = subcircuit[0]->middle_count;
                 int chunk_count = subcircuit[0]->chunk_count;
+                if(file_count)
+                {
+                    #pragma omp barrier
+                }
                 if(mpi_count == 1) MPI_Swap(task,g);
                 else if(mpi_count == 2) MPI_vs2_2(task,g);
                 else if(file_count != 0)
@@ -451,12 +462,22 @@ void DIO_Runner::run(vector<vector<Gate *>> &subcircuits) {
                     }
                     // ol();
                 }
+                if(file_count)
+                {
+                    #pragma omp barrier
+                }
             }
             else {
                 setFD_sub(task);
                 outer_loop_m0(innerloop_sub)
             }
             #pragma omp barrier
+            if(env.is_MPI)
+            {
+                #pragma omp master
+                MPI_Barrier(MPI_COMM_WORLD);
+                #pragma omp barrier
+            }
         }
     }
 }
