@@ -410,8 +410,13 @@ void DIO_Runner::run(vector<vector<Gate *>> &subcircuits) {
         int tid = omp_get_thread_num();
         auto task = thread_tasks[tid];
         task.tid = tid;
+        task.MPI_gate_count = 0;
+        task.MPI_gate_time = 0;
+        task.pure_IO_gate_count = 0;
+        task.pure_IO_gate_time = 0;
         for (auto &subcircuit : subcircuits) {
             Gate *g = subcircuit[0];
+            double t_start = omp_get_wtime();
             if (g->type == VSWAP) {
                 vector<int> targ = subcircuit[0]->targs;  // increasing
                 int mpi_count = subcircuit[0]->mpi_count;
@@ -462,6 +467,17 @@ void DIO_Runner::run(vector<vector<Gate *>> &subcircuits) {
                     }
                     // ol();
                 }
+                double t_end = omp_get_wtime();
+                if(mpi_count)
+                {
+                    task.MPI_gate_count++;
+                    task.MPI_gate_time+=t_end - t_start;
+                }
+                else
+                {
+                    task.pure_IO_gate_count+=subcircuit.size();
+                    task.pure_IO_gate_time+=t_end - t_start;
+                }
                 if(file_count)
                 {
                     #pragma omp barrier
@@ -472,11 +488,11 @@ void DIO_Runner::run(vector<vector<Gate *>> &subcircuits) {
                 outer_loop_m0(innerloop_sub)
             }
             #pragma omp barrier
-            if(env.is_MPI)
+            if(task.tid == 0)
             {
-                #pragma omp master
-                MPI_Barrier(MPI_COMM_WORLD);
-                #pragma omp barrier
+                const char* ip = env.rank?"42":"48";
+                printf("%s takes %lfs to execute %d IO gate. Average %lfs\n",ip,task.pure_IO_gate_time,task.pure_IO_gate_count,task.pure_IO_gate_time / task.pure_IO_gate_count);
+                printf("%s takes %lfs to execute %d MPI gate. Average %lfs\n",ip,task.MPI_gate_time,task.MPI_gate_count,task.MPI_gate_time / task.MPI_gate_count);
             }
         }
     }
