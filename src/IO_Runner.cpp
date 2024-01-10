@@ -411,13 +411,13 @@ void IO_Runner::run(vector<vector<Gate *>> &subcircuits) {
         task.pure_IO_gate_time = 0;
         for (auto &subcircuit : subcircuits) {
             Gate *g = subcircuit[0];
+            vector<int> targ = subcircuit[0]->targs;  // increasing
+            int mpi_count = subcircuit[0]->mpi_count;
+            int file_count = subcircuit[0]->file_count;
+            int middle_count = subcircuit[0]->middle_count;
+            int chunk_count = subcircuit[0]->chunk_count;
             double t_start = omp_get_wtime();
             if (g->type == VSWAP) {
-                vector<int> targ = subcircuit[0]->targs;  // increasing
-                int mpi_count = subcircuit[0]->mpi_count;
-                int file_count = subcircuit[0]->file_count;
-                int middle_count = subcircuit[0]->middle_count;
-                int chunk_count = subcircuit[0]->chunk_count;
                 if(file_count)
                 {
                     #pragma omp barrier
@@ -462,25 +462,25 @@ void IO_Runner::run(vector<vector<Gate *>> &subcircuits) {
                     }
                     // ol();
                 }
-                double t_end = omp_get_wtime();
-                if(mpi_count)
-                {
-                    task.MPI_gate_count++;
-                    task.MPI_gate_time+=t_end - t_start;
-                }
-                else
-                {
-                    task.pure_IO_gate_count+=subcircuit.size();
-                    task.pure_IO_gate_time+=t_end - t_start;
-                }
-                if(file_count)
-                {
-                    #pragma omp barrier
-                }
             }
             else {
                 setFD_sub(task);
                 outer_loop_m0(innerloop_sub)
+            }
+            double t_end = omp_get_wtime();
+            if(mpi_count)
+            {
+                task.MPI_gate_count++;
+                task.MPI_gate_time+=t_end - t_start;
+            }
+            else
+            {
+                task.pure_IO_gate_count+=subcircuit.size();
+                task.pure_IO_gate_time+=t_end - t_start;
+            }
+            if(file_count)
+            {
+                #pragma omp barrier
             }
         }
         #pragma omp barrier
