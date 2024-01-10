@@ -487,8 +487,8 @@ void IO_Runner::run(vector<vector<Gate *>> &subcircuits) {
         if(task.tid == 0)
         {
             const char* ip = env.rank?"42":"48";
-            printf("%s takes %lfs to execute %d IO gate. Average %lfs\n",ip,task.pure_IO_gate_time,task.pure_IO_gate_count,task.pure_IO_gate_time / task.pure_IO_gate_count);
-            printf("%s takes %lfs to execute %d MPI gate. Average %lfs\n",ip,task.MPI_gate_time,task.MPI_gate_count,task.MPI_gate_time / task.MPI_gate_count);
+            printf("%s takes %lfs to execute %d IO blocks. Average %lfs\n",ip,task.pure_IO_gate_time,task.pure_IO_gate_count,task.pure_IO_gate_time / task.pure_IO_gate_count);
+            printf("%s takes %lfs to execute %d MPI blocks. Average %lfs\n",ip,task.MPI_gate_time,task.MPI_gate_count,task.MPI_gate_time / task.MPI_gate_count);
         }
     }
 }
