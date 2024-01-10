@@ -26,6 +26,8 @@ public:
     double pure_IO_gate_time;
     int MPI_gate_count;
     int pure_IO_gate_count;
+    int sub_MPI_block_count;
+    int sub_IO_block_count;
 
     thread_IO_task()=default;
     thread_IO_task(int,int);

@@ -409,6 +409,8 @@ void IO_Runner::run(vector<vector<Gate *>> &subcircuits) {
         task.MPI_gate_time = 0;
         task.pure_IO_gate_count = 0;
         task.pure_IO_gate_time = 0;
+        task.sub_MPI_block_count = 0;
+        task.sub_IO_block_count = 0;
         for (auto &subcircuit : subcircuits) {
             Gate *g = subcircuit[0];
             vector<int> targ = subcircuit[0]->targs;  // increasing
@@ -471,11 +473,13 @@ void IO_Runner::run(vector<vector<Gate *>> &subcircuits) {
             if(mpi_count)
             {
                 task.MPI_gate_count++;
+                task.sub_MPI_block_count++;
                 task.MPI_gate_time+=t_end - t_start;
             }
             else
             {
                 task.pure_IO_gate_count+=subcircuit.size();
+                task.sub_IO_block_count++;
                 task.pure_IO_gate_time+=t_end - t_start;
             }
             if(file_count)
@@ -487,8 +491,8 @@ void IO_Runner::run(vector<vector<Gate *>> &subcircuits) {
         if(task.tid == 0)
         {
             const char* ip = env.rank?"42":"48";
-            printf("%s takes %lfs to execute %d IO blocks. Average %lfs\n",ip,task.pure_IO_gate_time,task.pure_IO_gate_count,task.pure_IO_gate_time / task.pure_IO_gate_count);
-            printf("%s takes %lfs to execute %d MPI blocks. Average %lfs\n",ip,task.MPI_gate_time,task.MPI_gate_count,task.MPI_gate_time / task.MPI_gate_count);
+            printf("%s takes %lfs to execute %d IO blocks & %d IO gate. Average %lfs/gate\n",ip,task.pure_IO_gate_time,task.sub_IO_block_count,task.pure_IO_gate_count,task.pure_IO_gate_time / task.pure_IO_gate_count);
+            printf("%s takes %lfs to execute %d MPI blocks & %d MPI gate. Average %lfs/gate\n",ip,task.MPI_gate_time,task.sub_MPI_block_count,task.MPI_gate_count,task.MPI_gate_time / task.MPI_gate_count);
         }
     }
 }
