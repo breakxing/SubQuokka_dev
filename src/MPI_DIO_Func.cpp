@@ -15,6 +15,7 @@ bool DIO_Runner::skip_read_write(Gate * & g,const int &idx)
 {
     if((g->name == "Z_Gate_DIO" || g->name == "Phase_Gate_DIO") && (idx == 0) && (!isChunk(g->targs[0]) && (!isMpi(g->targs[0])))) return true;
     else if((g->name == "SWAP_Gate_DIO") && (idx == 0 || idx == 3) && (!isChunk(g->targs[0]))) return true;
+    else if(g->name == "CPhase_Gate_DIO" && (idx != 1) && (!isChunk(g->targs[1]) && (isChunk(g->targs[0])) && (!isMpi(g->targs[1])))) return true;
     else if(g->name == "CPhase_Gate_DIO" && (idx != 3) && (!isChunk(g->targs[1]) && (!isMpi(g->targs[1])))) return true;
     return false;
 }
@@ -487,37 +488,22 @@ void DIO_Runner::_two_gate_mpi_read1_recv1(thread_DIO_task &task,Gate * &g)
 }
 void DIO_Runner::_mpi_one_gate_inner(thread_DIO_task &task,Gate * &g)
 {
-    int num_worker = (env.chunk_state == env.thread_state)? 1 : 2;
-    int member_th = env.rank > task.partner_using[0]? 1 : 0;
     int partner_rank = task.partner_using[0];
+    int member_th = env.rank > partner_rank;
     int one_round_chunk = min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
-    int half_round_chunk = one_round_chunk >> 1;
-    if(num_worker == 1)
+    for(int i = 0;i < one_round_chunk;i++)
     {
-        if(member_th == 1) _thread_no_exec_MPI(task,1);
-        else
-        {
-            if(pread(task.fd_using[0],&task.buffer1[0],env.chunk_size,task.fd_offset_using[0]));
-            MPI_Recv(&task.buffer2[0],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-            g->run_one_qubit_mpi_dio(task.buffer1,task.buffer2,0,0,1);
-            MPI_Isend(&task.buffer2[0],env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request[0]);
-            if(pwrite(task.fd_using[0],&task.buffer1[0],env.chunk_size,task.fd_offset_using[0]));
-        }
-        return;
+        if(pread(task.fd_using[0],&task.buffer1[i * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + i * env.chunk_size)); 
     }
-    if(pread(task.fd_using[0],&task.buffer1[0],one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
-    MPI_Sendrecv(&task.buffer1[(!member_th) * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,&task.buffer2[member_th * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-
-    
-    //Check
+    MPI_Sendrecv(&task.buffer1[0],one_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,&task.buffer2[0],one_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     complex<double> **buffer1 = &task.buffer1;
     complex<double> **buffer2 = &task.buffer2;
     if(member_th) swap(buffer1,buffer2);
-
-
-    g->run_one_qubit_mpi_dio(*buffer1,*buffer2,member_th * half_round_chunk,member_th * half_round_chunk,half_round_chunk);
-    MPI_Sendrecv(&task.buffer2[member_th * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,&task.buffer1[(!member_th) * half_round_chunk * env.chunk_state],half_round_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-    if(pwrite(task.fd_using[0],&task.buffer1[0],one_round_chunk * env.chunk_size,task.fd_offset_using[0]));
+    g->run_one_qubit_mpi_dio(*buffer1,*buffer2,0,0,one_round_chunk);
+    for(int i = 0;i < one_round_chunk;i++)
+    {
+        if(pwrite(task.fd_using[0],&task.buffer1[i * env.chunk_state],env.chunk_size,task.fd_offset_using[0] + i * env.chunk_size)); 
+    }
 }
 void DIO_Runner::_thread_read2_recv2(thread_DIO_task &task,Gate * &g,int num_worker,long long stride)
 {
