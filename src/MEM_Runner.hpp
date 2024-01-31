@@ -23,6 +23,7 @@ public:
     void run(std::vector<std::vector<Gate *>> &) override;
     void MPI_gate_scheduler(thread_MEM_task &,Gate* &g);
     void _mpi_one_gate_inner(thread_MEM_task &,Gate* &g,long long);
+    void MPI_one_qubit_gate_diagonal(thread_MEM_task &,Gate* &);
 };
 
 

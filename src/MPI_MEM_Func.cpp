@@ -22,17 +22,25 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
         task.partner_using = {partner_rank};
         if(g->name == "Z_Gate_MEM" || g->name == "Phase_Gate_MEM" || g->name == "RZ_Gate_MEM")
         {
-            bool isupper = env.rank < partner_rank;
-            for(int i = task.tid * env.thread_state;i < ((task.tid + 1) * env.thread_state);i+=env.chunk_state)
-            {
-                g->run_one_qubit_mpi_mem_diagonal(buffer,i,isupper);
-            }
+            MPI_one_qubit_gate_diagonal(task,g);
             return;
         }
         for(int i = task.tid * env.thread_state;i < ((task.tid + 1) * env.thread_state);i+=per_chunk * env.chunk_state)
         {
             _mpi_one_gate_inner(task,g,i);
         }
+    }
+}
+void MEM_Runner::MPI_one_qubit_gate_diagonal(thread_MEM_task &task,Gate* &g)
+{
+    if(g->name == "Z_Gate_MEM" || g->name == "Phase_Gate_MEM" || g->name == "RZ_Gate_MEM")
+    {
+        bool isupper = env.rank < task.partner_using[0];
+        for(int i = task.tid * env.thread_state;i < ((task.tid + 1) * env.thread_state);i+=env.chunk_state)
+        {
+            g->run_one_qubit_mpi_mem_diagonal(buffer,i,isupper);
+        }
+        return;
     }
 }
 void MEM_Runner::_mpi_one_gate_inner(thread_MEM_task &task,Gate* &g,long long startIdx)
