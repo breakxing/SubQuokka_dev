@@ -17,7 +17,7 @@ class verifier:
             self.file_paths = self.args.state_paths.split(",")
             self.run = self.run_IO
         #     self.loader = loader_IO
-        elif args.runner_type == "MEM":
+        elif args.runner_type == "MEM" or args.runner_type == "MPI_MEM":
             self.run = self.run_MEM
         #     self.loader = loader_MEM
         elif args.runner_type == "MPI":

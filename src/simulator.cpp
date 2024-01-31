@@ -109,6 +109,8 @@ inline void setupFiles(string state_paths) {
     string token;
     while (getline(ss, token, ',')) {
         // cout << token << endl; // print path of state files
+        if(env.MPI_testing)
+            token.insert(7,to_string(env.rank));
         tokens.push_back(token);
     }
 
@@ -147,6 +149,7 @@ void setENV(INIReader &reader) {
     env.is_subcircuit = reader.GetInteger(section, "is_subcircuit", 1);
     env.is_MPI = (seg.mpi > 0);
     env.MPI_buffer_size = reader.GetInteger(section, "MPI_buffe_size", 16);
+    env.MPI_testing = reader.GetInteger(section, "MPI_testing", 0);
     env.num_file = (1ULL << seg.file);
     env.num_thread = env.num_file;
     env.half_num_thread = env.num_thread / 2;
@@ -171,9 +174,10 @@ void setENV(INIReader &reader) {
     }
 
     // printf("is density: %d\n", IsDensity);
-    if(env.runner_type != "MEM")
+    if(env.runner_type != "MEM" && env.runner_type != "MPI_MEM")
     {
-        read_state_file_paths(reader,section);
+        if(!(env.runner_type == "MPI_IO" && env.MPI_testing))
+            read_state_file_paths(reader,section);
     }
 }
 // initialize the seg and env from the *.ini file
@@ -197,13 +201,15 @@ void Simulator::setupIni(string ini) {
         else
             std::cout<<"IO Mode\n";
         Runner = new IO_Runner();
+        if(env.MPI_testing)
+            read_state_file_paths(reader,"system");
     } else if (env.runner_type == "DirectIO" || env.runner_type == "MPI_DIO") {
         if(env.runner_type == "MPI_DIO")
             cout<<"MPI_DIO Mode\n";
         else
             std::cout<<"DIO Mode\n";
         Runner = new DIO_Runner();
-    } else if (env.runner_type == "MEM") {
+    } else if (env.runner_type == "MEM" || env.runner_type == "MPI_MEM") {
         std::cout<<"MEM Mode\n";
         Runner = new MEM_Runner();
     } else if (env.runner_type == "RDMA") {
@@ -228,7 +234,7 @@ void Simulator::setupCir(string cir){
         else {
             setupCircuit_DIO(cir);
         }
-    } else if (env.runner_type == "MEM") {
+    } else if (env.runner_type == "MEM" || env.runner_type == "MPI_MEM") {
         if(env.is_subcircuit)
             setupSubCircuits_MEM(cir);
         else {
@@ -650,9 +656,10 @@ void Simulator::run() {
 
     // cerr << "before dump" << endl;
     // cerr << "env.dumpfile: " << env.dumpfile << endl;
-    if(env.runner_type == "MEM" && env.dumpfile != ""){
+    if((env.runner_type == "MEM" || env.runner_type == "MPI_MEM") && env.dumpfile != ""){
         // cerr << "inside dump" << endl;
         ofstream resfile;
+        env.dumpfile = env.dumpfile.substr(0,3) + to_string(env.rank) + ".txt";
         resfile.open(env.dumpfile);
         for(auto &x :static_cast<MEM_Runner *>(Runner)->buffer)
         resfile << fixed << setprecision(11) << x.real() << endl << x.imag() << endl;
@@ -668,7 +675,7 @@ Simulator::Simulator(string ini, string cir) {
     setupCir(cir);
     cerr << "[Simulator]: Circuit setup." << endl;
     
-    if(env.runner_type != "MEM")
+    if(env.runner_type != "MEM" && env.runner_type != "MPI_MEM")
         setupStateFile();
 
     cerr << "[Simulator]: StateFile setup." << endl;
@@ -682,6 +689,7 @@ Simulator::Simulator(string ini, string cir) {
 Simulator::~Simulator() {
     if(env.is_MPI)
     {
+        MPI_Barrier(MPI_COMM_WORLD);
         if(MPI_Finalize()!=MPI_SUCCESS)
         {
             cout<<"Error"<<endl;
