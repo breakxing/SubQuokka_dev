@@ -95,7 +95,7 @@ void setSEG(INIReader &reader) {
     seg.middle = seg.N - seg.file - seg.chunk;
 
     // assert for invalid case
-    
+    assert(seg.chunk >= 1);
     assert(seg.N >= (seg.file + seg.chunk));
 }
 
@@ -149,6 +149,7 @@ void setENV(INIReader &reader) {
     env.is_subcircuit = reader.GetInteger(section, "is_subcircuit", 1);
     env.is_MPI = (seg.mpi > 0);
     env.MPI_buffer_size = reader.GetInteger(section, "MPI_buffe_size", 16);
+    assert(env.MPI_buffer_size >= 2);
     env.MPI_testing = reader.GetInteger(section, "MPI_testing", 0);
     env.num_file = (1ULL << seg.file);
     env.num_thread = env.num_file;
@@ -285,6 +286,11 @@ T *setGate_vswap(stringstream &ss, int swap_size){
         ss >> temp;
         targ.push_back(temp);
     }
+    if(env.is_MPI && targ.size() > 4)
+    {
+        cerr << "[setGate]: Not implemented yet." << endl;
+        exit(1);
+    }
     return new T(targ);
 }
 
@@ -318,7 +324,11 @@ Gate *setUnitary(stringstream &ss, int n_qubits) {
         ss >> re >> im;
         coeff[i] = complex<double>(re, im);
     }
-
+    if(env.is_MPI && targ.size() > 2)
+    {
+        cerr << "[setGate]: Not implemented yet." << endl;
+        exit(1);
+    }
     return new T(targ, coeff);
 }
 
@@ -541,8 +551,8 @@ Gate *Simulator::setGate_MEM(string &line) {
         return setGate_Phase<CPhase_Gate_MEM>(ss, TWO_QUBIT);
     } else if (gate_ops == "RZZ") {
         return setGate_Phase<RZZ_Gate_MEM>(ss, TWO_QUBIT);
-    } else if (gate_ops == "U3") {
-        return setUnitary<U3_Gate_MEM>(ss, THREE_QUBIT);
+    // } else if (gate_ops == "U3") {
+    //     return setUnitary<U3_Gate_MEM>(ss, THREE_QUBIT);
     } else if (gate_ops == "VSWAP_1_1") {
         return setGate_vswap<VSWAP_Gate_1_1_MEM>(ss, 1);
     } else if (gate_ops == "VSWAP_2_2") {
@@ -553,6 +563,10 @@ Gate *Simulator::setGate_MEM(string &line) {
         return setGate_vswap<VSWAP_Gate_4_4_MEM>(ss, 4);
     } else if (gate_ops == "VSWAP_6_6") {
         return setGate_vswap<VSWAP_Gate_6_6_MEM>(ss, 6);
+    } else if (gate_ops == "MPI_VSWAP_1_1") {
+        return setGate_vswap<MPI_VSWAP_Gate_1_1_MEM>(ss, 1);
+    } else if (gate_ops == "MPI_VSWAP_2_2") {
+        return setGate_vswap<MPI_VSWAP_Gate_2_2_MEM>(ss, 2);
     } else {
         cerr << "[setGate]: Not implemented yet." << endl;
         exit(1);
@@ -656,7 +670,7 @@ void Simulator::run() {
 
     // cerr << "before dump" << endl;
     // cerr << "env.dumpfile: " << env.dumpfile << endl;
-    if((env.runner_type == "MEM" || env.runner_type == "MPI_MEM") && env.dumpfile != ""){
+    if((env.runner_type == "MEM" || env.runner_type == "MPI_MEM") && env.dumpfile != "" && env.MPI_testing){
         // cerr << "inside dump" << endl;
         ofstream resfile;
         env.dumpfile = env.dumpfile.substr(0,3) + to_string(env.rank) + ".txt";

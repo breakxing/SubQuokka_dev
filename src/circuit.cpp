@@ -60,10 +60,19 @@ using namespace placeholders;
     run_one_qubit_mpi_mem = bind(&gate_name::run_mpi_mem, this, _1,_2,_3,_4,_5);
 
 #define bind_gate_mpi_1_mem_diagonal(gate_name) \
-    run_one_qubit_mpi_mem_diagonal = bind(&gate_name::run_mpi_mem, this, _1,_2,_3);
+    run_one_qubit_mpi_mem_diagonal = bind(&gate_name::run_mpi_mem, this, _1,_2,_3,_4);
 
-#define bind_gate_special_swap_mem(gate_name)\
-    run_one_qubit_mpi_mem = bind(&gate_name::run_mpi_nonchunk_chunk_mem, this, _1,_2,_3,_4,_5);
+#define bind_gate_swap_mpi_mpi(gate_name) \
+    run_one_qubit_mpi_mem = bind(&gate_name::run_mpi_mpi, this, _1,_2,_3,_4,_5);
+
+#define bind_gate_swap_mpi_chunk(gate_name) \
+    run_one_qubit_mpi_mem = bind(&gate_name::run_mpi_chunk, this, _1,_2,_3,_4,_5);
+
+#define bind_gate_swap_mpi_file_middle(gate_name) \
+    run_one_qubit_mpi_mem = bind(&gate_name::run_mpi_file_middle, this, _1,_2,_3,_4,_5);
+
+#define bind_gate_mpi_mpi_u2_mem(gate_name) \
+    run_mem_u2 = bind(&gate_name::run_mpi_nonchunk,this,_1,_2,_3,_4,_5,_6,_7,_8,_9);
 
 #define bind_gate_2_mem(gate_name) \
     if(isChunk(targ[1]))\
@@ -122,6 +131,13 @@ using namespace placeholders;
             update_type1\
         }\
         update_type2\
+    }
+
+#define mpi_nonchunk_nonchunk_mem(init_type,length, update_type1, gate_func) \
+    init_type\
+    for (int k = 0; k < length; k++) {\
+        gate_func\
+        update_type1\
     }
 
 #define chunk_gate_mem(init_type, update_type1, update_type2, gate_func) \
@@ -292,10 +308,10 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer[off0] *= exp_n_iPhi_2;\
     buffer[off1] *= exp_p_iPhi_2;
 
-#define RZUPPER \
+#define RZ0 \
     buffer[off0] *= exp_n_iPhi_2;
 
-#define RZLOWER \
+#define RZ1 \
     buffer[off0] *= exp_p_iPhi_2;
 
 #define RZGATEMPI \
@@ -322,6 +338,16 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer2[off2] = coeff[ 8] * q0 + coeff[ 9] * q1 + coeff[10] * q2 + coeff[11] * q3;\
     buffer2[off3] = coeff[12] * q0 + coeff[13] * q1 + coeff[14] * q2 + coeff[15] * q3;
 
+#define U2GENERAL \
+    q0 = buffer1[off0];\
+    q1 = buffer2[off1];\
+    q2 = buffer3[off2];\
+    q3 = buffer4[off3];\
+    buffer1[off0] = coeff[ 0] * q0 + coeff[ 1] * q1 + coeff[ 2] * q2 + coeff[ 3] * q3;\
+    buffer2[off1] = coeff[ 4] * q0 + coeff[ 5] * q1 + coeff[ 6] * q2 + coeff[ 7] * q3;\
+    buffer3[off2] = coeff[ 8] * q0 + coeff[ 9] * q1 + coeff[10] * q2 + coeff[11] * q3;\
+    buffer4[off3] = coeff[12] * q0 + coeff[13] * q1 + coeff[14] * q2 + coeff[15] * q3;
+
 #define SWAPGate \
     q0 = buffer[off0];\
     q1 = buffer[off1];\
@@ -341,6 +367,12 @@ complex<double> q0; complex<double> q1; complex<double> q2; complex<double> q3; 
     buffer[off1] *= exp_p_iPhi_2;\
     buffer[off2] *= exp_p_iPhi_2;\
     buffer[off3] *= exp_n_iPhi_2;
+
+#define RZZN \
+    buffer[off0] *= exp_n_iPhi_2;
+
+#define RZZP \
+    buffer[off0] *= exp_p_iPhi_2;
 
 Gate::Gate(vector<int> targ): targs(targ){
     for(auto &x: targ){
@@ -2591,9 +2623,9 @@ void Z_Gate_MEM::run_nonchunk(vector<complex<double>> &buffer, long long idx){
                     update_off1(1), ZGATE)
 }
 
-void Z_Gate_MEM::run_mpi_mem(vector<complex<double>> &buffer, long long idx,bool isupper){
-    if(isupper) return;
-    mpi_gate_mem(init_off1(long long, idx),env.chunk_state, update_off1(1), ZGATE)
+void Z_Gate_MEM::run_mpi_mem(vector<complex<double>> &buffer, long long idx,int pos,long long length){
+    if(!pos) return;
+    mpi_gate_mem(init_off1(long long, idx),length, update_off1(1), ZGATE)
 }
 
 Phase_Gate_MEM::Phase_Gate_MEM(vector<int> targ, double phi): ONE_QUBIT_GATE_MEM(targ), phi(cos(phi), sin(phi)) {
@@ -2617,9 +2649,9 @@ void Phase_Gate_MEM::run_nonchunk(vector<complex<double>> &buffer, long long idx
     nonchunk_gate_mem(init_off1(long long, idx + half_off), 
                     update_off1(1), PGATE)
 }
-void Phase_Gate_MEM::run_mpi_mem(vector<complex<double>> &buffer, long long idx,bool isupper){
-    if(isupper) return;
-    mpi_gate_mem(init_off1(long long, idx),env.chunk_state, update_off1(1), PGATE)
+void Phase_Gate_MEM::run_mpi_mem(vector<complex<double>> &buffer, long long idx,int pos,long long length){
+    if(!pos) return;
+    mpi_gate_mem(init_off1(long long, idx),length, update_off1(1), PGATE)
 }
 U1_Gate_MEM::U1_Gate_MEM(vector<int> targ, vector<complex<double>> coeff): ONE_QUBIT_GATE_MEM(targ), coeff(coeff) {
     name = "U1_Gate_MEM";
@@ -2727,14 +2759,14 @@ void RZ_Gate_MEM::run_nonchunk(vector<complex<double>> &buffer, long long idx){
                     update_off2(1), RZGATE)
 }
 
-void RZ_Gate_MEM::run_mpi_mem(vector<complex<double>> &buffer, long long idx,bool isupper){
-    if(isupper)
+void RZ_Gate_MEM::run_mpi_mem(vector<complex<double>> &buffer, long long idx,int pos,long long length){
+    if(!pos)
     {
-        mpi_gate_mem(init_off1(long long, idx),env.chunk_state, update_off1(1), RZUPPER)
+        mpi_gate_mem(init_off1(long long, idx),length, update_off1(1), RZ0)
     }
     else
     {
-        mpi_gate_mem(init_off1(long long, idx),env.chunk_state, update_off1(1), RZLOWER)
+        mpi_gate_mem(init_off1(long long, idx),env.chunk_state, update_off1(1), RZ1)
     }
 }
 
@@ -2748,9 +2780,34 @@ TWO_QUBIT_GATE_MEM::TWO_QUBIT_GATE_MEM(vector<int> targ): Gate(targ) {
     off_1 = half_off_1 * 2;
 }
 
-U2_Gate_MEM::U2_Gate_MEM(vector<int> targ, vector<complex<double>> coeff): TWO_QUBIT_GATE_MEM(targ), coeff(coeff) {
+U2_Gate_MEM::U2_Gate_MEM(vector<int> targ, vector<complex<double>> matrix): TWO_QUBIT_GATE_MEM(targ) {
     name = "U2_Gate_MEM";
-    bind_gate_2_mem(U2_Gate_MEM)
+    assert(targ[0] < targ[1]);
+    coeff.resize(16);
+    for (int i = 0; i < 16; i++) {
+        int res = 0;
+        int b1 = i & 1;
+        int b2 = (i >> 1) & 1;
+        int b3 = (i >> 2) & 1;
+        int b4 = (i >> 3) & 1;
+        res = (b3 << 3) | (b4 << 2) | (b1 << 1) | b2;
+        coeff[i] = matrix[res];
+    }
+    if(mpi_count)
+    {
+        if(chunk_count)
+        {
+            bind_gate_mpi_1_mem(U2_Gate_MEM)
+        }
+        else
+        {
+            bind_gate_mpi_mpi_u2_mem(U2_Gate_MEM)
+        }
+    }
+    else
+    {
+        bind_gate_2_mem(U2_Gate_MEM)
+    }
 }
 
 void U2_Gate_MEM::run_chunk_chunk(vector<complex<double>> &buffer, long long idx){
@@ -2783,11 +2840,30 @@ void U2_Gate_MEM::run_nonchunk_nonchunk(vector<complex<double>> &buffer, long lo
                         U2Gate)
 }
 
+void U2_Gate_MEM::run_mpi_nonchunk(vector<complex<double>>& buffer1,vector<complex<double>>& buffer2,vector<complex<double>>& buffer3,vector<complex<double>>& buffer4,long long offset0,long long offset1,long long offset2,long long offset3,long long length){
+    mpi_nonchunk_nonchunk_mem(init_off4(long long,offset0,offset1,offset2,offset3),length,update_off4(1),U2GENERAL)
+}
+
+void U2_Gate_MEM::run_mpi_mem(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,long long offset0,long long offset1,long long length){
+    mpi_nonchunk_chunk_mem(init_off4(long long, offset0,offset0 + half_off_0,offset1,offset1 + half_off_0),length, update_off4(1),update_off4(half_off_0),U2MPICHUNK)
+}
+
 SWAP_Gate_MEM::SWAP_Gate_MEM(vector<int> targ): TWO_QUBIT_GATE_MEM(targ) {
     name = "SWAP_Gate_MEM";
-    if(mpi_count == 1 && chunk_count == 1)
+    if(mpi_count == 2)
     {
-        bind_gate_special_swap_mem(SWAP_Gate_MEM);
+        bind_gate_swap_mpi_mpi(SWAP_Gate_MEM)
+    }
+    else if(mpi_count)
+    {
+        if(chunk_count)
+        {
+            bind_gate_swap_mpi_chunk(SWAP_Gate_MEM)
+        }
+        else
+        {
+            bind_gate_swap_mpi_file_middle(SWAP_Gate_MEM)
+        }
     }
     else
     {
@@ -2822,8 +2898,16 @@ void SWAP_Gate_MEM::run_nonchunk_nonchunk(vector<complex<double>> &buffer, long 
                         SWAPGate)
 }
 
-void SWAP_Gate_MEM::run_mpi_nonchunk_chunk_mem(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,long long offset0,long long offset1,long long length){
+void SWAP_Gate_MEM::run_mpi_mpi(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,long long offset0,long long offset1,long long length){
+    mpi_gate_mem(init_off2(long long, offset0, offset1),length, update_off2(1), SWAPGateMPIChunk)
+}
+
+void SWAP_Gate_MEM::run_mpi_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,long long offset0,long long offset1,long long length){
     mpi_nonchunk_chunk_mem(init_off2(long long, offset0 + half_off_0, offset1),length, update_off2(1),update_off2(half_off_0),SWAPGateMPIChunk)
+}
+
+void SWAP_Gate_MEM::run_mpi_file_middle(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,long long offset0,long long offset1,long long length){
+    mpi_nonchunk_nonchunk_mem(init_off2(long long, offset0, offset1),length, update_off2(1),SWAPGateMPIChunk)
 }
 
 VSWAP_Gate_1_1_MEM::VSWAP_Gate_1_1_MEM(vector<int> targ): SWAP_Gate_MEM(targ) {
@@ -2831,11 +2915,22 @@ VSWAP_Gate_1_1_MEM::VSWAP_Gate_1_1_MEM(vector<int> targ): SWAP_Gate_MEM(targ) {
     name == "VSWAP_Gate_1_1_MEM";
 }
 
+MPI_VSWAP_Gate_1_1_MEM::MPI_VSWAP_Gate_1_1_MEM(vector<int>targ):SWAP_Gate_MEM(targ){
+    type = VSWAP;
+    name == "MPI_VSWAP_Gate_1_1_MEM";
+}
 
 CPhase_Gate_MEM::CPhase_Gate_MEM(vector<int> targ, double phi): TWO_QUBIT_GATE_MEM(targ) {
     name = "CPhase_Gate_MEM";
     exp_iPhi = complex<double>(cos(phi), sin(phi));
-    bind_gate_2_mem(CPhase_Gate_MEM)
+    if(mpi_count)
+    {
+        bind_gate_mpi_1_mem_diagonal(CPhase_Gate_MEM)
+    }
+    else
+    {
+        bind_gate_2_mem(CPhase_Gate_MEM)
+    }
 }
 
 void CPhase_Gate_MEM::run_chunk_chunk(vector<complex<double>> &buffer, long long idx){
@@ -2861,12 +2956,23 @@ void CPhase_Gate_MEM::run_nonchunk_nonchunk(vector<complex<double>> &buffer, lon
                         update_off1(1),
                         CPGATE)
 }
+void CPhase_Gate_MEM::run_mpi_mem(vector<complex<double>> &buffer, long long idx,int pos,long long length){
+    if(pos < 3) return;
+    mpi_gate_mem(init_off1(long long, idx),length, update_off1(1), CPGATE)
+}
 
 RZZ_Gate_MEM::RZZ_Gate_MEM(vector<int> targ, double phi): TWO_QUBIT_GATE_MEM(targ) {
     name = "RZZ_Gate_MEM";
     exp_p_iPhi_2 = complex<double>(cos(phi/2), sin(phi/2));
     exp_n_iPhi_2 = complex<double>(cos(-phi/2), sin(-phi/2));
-    bind_gate_2_mem(RZZ_Gate_MEM)
+    if(mpi_count)
+    {
+        bind_gate_mpi_1_mem_diagonal(RZZ_Gate_MEM)
+    }
+    else
+    {
+        bind_gate_2_mem(RZZ_Gate_MEM)
+    }
 }
 
 void RZZ_Gate_MEM::run_chunk_chunk(vector<complex<double>> &buffer, long long idx){
@@ -2899,6 +3005,16 @@ void RZZ_Gate_MEM::run_nonchunk_nonchunk(vector<complex<double>> &buffer, long l
                         RZZGATE)
 }
 
+void RZZ_Gate_MEM::run_mpi_mem(vector<complex<double>> &buffer, long long idx,int pos,long long length){
+    if(pos == 0 || pos == 3)
+    {
+        mpi_gate_mem(init_off1(long long, idx),length, update_off1(1), RZZN)
+    }
+    else
+    {
+        mpi_gate_mem(init_off1(long long, idx),length, update_off1(1), RZZP)
+    }
+}
 
 /*-----THREE_QUBIT_GATE-----*/
 U3_Gate_MEM::U3_Gate_MEM(vector<int> targ, vector<complex<double>> coeff): Gate(targ), coeff(coeff) {
@@ -3204,6 +3320,114 @@ VSWAP_Gate_2_2_MEM::VSWAP_Gate_2_2_MEM(vector<int> targ): Gate(targ) {
         
     _run = bind(&VSWAP_Gate_2_2_MEM::run_nonchunk_chunk, this, _1, _2);
     name += "VSWAP_Gate_2_2_MEM";
+}
+
+MPI_VSWAP_Gate_2_2_MEM::MPI_VSWAP_Gate_2_2_MEM(vector<int>targ): Gate(targ){
+    type = VSWAP;
+    name = "MPI_VSWAP_Gate_2_2_MEM";
+    half_off_0 = env.qubit_offset[targ[0]];
+    half_off_1 = env.qubit_offset[targ[1]];
+    half_off_2 = 0;
+    half_off_3 = 0;
+    off_0 = half_off_0 * 2;
+    off_1 = half_off_1 * 2;
+    off_2 = half_off_2 * 2;
+    off_3 = half_off_3 * 2;
+    run_mpi_vswap2_2_mem = bind(&MPI_VSWAP_Gate_2_2_MEM::run_vswap_2_2,this,_1,_2,_3,_4,_5,_6,_7,_8,_9);
+}
+
+void MPI_VSWAP_Gate_2_2_MEM::run_vswap_2_2(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,vector<complex<double>>&buffer3,vector<complex<double>>&buffer4,long long offset0,long long offset1,long long offset2,long long offset3,long long length)
+{
+    int off0001 = offset0 +half_off_0;
+    int off0010 = offset0 +half_off_1;
+    int off0011 = offset0 +half_off_0 + half_off_1;
+    int off0100 = offset1 + half_off_2;
+    int off0110 = offset1 + half_off_1 + half_off_2;
+    int off0111 = offset1 + half_off_0 + half_off_1 + half_off_2;
+    int off1000 = offset2 + half_off_3;
+    int off1001 = offset2 + half_off_0 + half_off_3;
+    int off1011 = offset2 + half_off_0 + half_off_1 + half_off_3;
+    int off1100 = offset3 + half_off_2 + half_off_3;
+    int off1101 = offset3 + half_off_0 + half_off_2 + half_off_3;
+    int off1110 = offset3 + half_off_1 + half_off_2 + half_off_3;
+    complex<double> q0001;
+    complex<double> q0010;
+    complex<double> q0011;
+    complex<double> q0100;
+    complex<double> q0110;
+    complex<double> q0111;
+    complex<double> q1000;
+    complex<double> q1001;
+    complex<double> q1011;
+    complex<double> q1100;
+    complex<double> q1101;
+    complex<double> q1110;
+    for (int i = 0; i < length; i += off_1) {
+        for (int j = 0; j < half_off_1; j += off_0) {
+            for (int k = 0; k < half_off_0; k++) {
+                q0001 = buffer1[off0001];
+                q0010 = buffer1[off0010];
+                q0011 = buffer1[off0011];
+                q0100 = buffer2[off0100];
+                q0110 = buffer2[off0110];
+                q0111 = buffer2[off0111];
+                q1000 = buffer3[off1000];
+                q1001 = buffer3[off1001];
+                q1011 = buffer3[off1011];
+                q1100 = buffer4[off1100];
+                q1101 = buffer4[off1101];
+                q1110 = buffer4[off1110];
+                buffer1[off0001] = q0100;
+                buffer1[off0010] = q1000;
+                buffer1[off0011] = q1100;
+                buffer2[off0100] = q0001;
+                buffer2[off0110] = q1001;
+                buffer2[off0111] = q1101;
+                buffer3[off1000] = q0010;
+                buffer3[off1001] = q0110;
+                buffer3[off1011] = q1110;
+                buffer4[off1100] = q0011;
+                buffer4[off1101] = q0111;
+                buffer4[off1110] = q1011;
+                off0001++;
+                off0010++;
+                off0011++;
+                off0100++;
+                off0110++;
+                off0111++;
+                off1000++;
+                off1001++;
+                off1011++;
+                off1100++;
+                off1101++;
+                off1110++;
+            }
+            off0001 += half_off_0;
+            off0010 += half_off_0;
+            off0011 += half_off_0;
+            off0100 += half_off_0;
+            off0110 += half_off_0;
+            off0111 += half_off_0;
+            off1000 += half_off_0;
+            off1001 += half_off_0;
+            off1011 += half_off_0;
+            off1100 += half_off_0;
+            off1101 += half_off_0;
+            off1110 += half_off_0;
+        }
+        off0001 += half_off_1;
+        off0010 += half_off_1;
+        off0011 += half_off_1;
+        off0100 += half_off_1;
+        off0110 += half_off_1;
+        off0111 += half_off_1;
+        off1000 += half_off_1;
+        off1001 += half_off_1;
+        off1011 += half_off_1;
+        off1100 += half_off_1;
+        off1101 += half_off_1;
+        off1110 += half_off_1;
+    }
 }
 
 void VSWAP_Gate_2_2_MEM::run_nonchunk_chunk(vector<complex<double>> &buffer, long long idx){

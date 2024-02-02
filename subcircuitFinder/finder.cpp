@@ -177,6 +177,23 @@ void genCirFile(const string &filename, const string &cirname, vector<string> &g
             cout << endl << "---\n";
             */
             for(auto i = 0; i < changeSize; i++) {
+                if((i + 1 < changeSize) && (in_mpi_qubits(mpi_qubits,sortedCur[i].value) || in_mpi_qubits(mpi_qubits,sortedNext[i].value)) && (in_mpi_qubits(mpi_qubits,sortedCur[i + 1].value) || in_mpi_qubits(mpi_qubits,sortedNext[i + 1].value)))
+                {
+                    strOut = "MPI_VSWAP_2_2 ";
+                    strOut += to_string(sortedCur[i].value) + " ";
+                    strOut += to_string(sortedCur[i+1].value) + " ";
+                    strOut += to_string(sortedNext[i].value) + " ";
+                    strOut += to_string(sortedNext[i+1].value);
+
+                    chunkVec[to_string(sortedCur[i].index)] = to_string(sortedNext[i].value);
+                    chunkVec[to_string(sortedNext[i].index)] = to_string(sortedCur[i].value);
+                    chunkVec[to_string(sortedCur[i+1].index)] = to_string(sortedNext[i+1].value);
+                    chunkVec[to_string(sortedNext[i+1].index)] = to_string(sortedCur[i+1].value);
+                    i++;
+                    ofs << "1" << endl;
+                    ofs << strOut << endl;
+                    continue;
+                }
                 bool has_mpi = false;
                 if(in_mpi_qubits(mpi_qubits,sortedCur[i].value) || in_mpi_qubits(mpi_qubits,sortedNext[i].value))
                 {
@@ -297,7 +314,7 @@ void genCirFile(const string &filename, const string &cirname, vector<string> &g
     //         string strtmp = "";
     //         if(in_mpi_qubits(mpi_qubits,vec[i].first) || in_mpi_qubits(mpi_qubits,vec[newidx].first))
     //         {
-    //             strtmp = "SWAP " + to_string(vec[i].first) + " " + to_string(vec[newidx].first) + "\n";
+    //             strtmp = "MPI_VSWAP_1_1 " + to_string(vec[i].first) + " " + to_string(vec[newidx].first) + "\n";
     //         }
     //         else
     //         {

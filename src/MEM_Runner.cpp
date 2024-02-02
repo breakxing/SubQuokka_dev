@@ -51,8 +51,8 @@ void process_mem_usage(double& vm_usage, double& resident_set)
 thread_MEM_task::thread_MEM_task(int tid,int MPI_buffer_size)
 {
     buffer2.resize(MPI_buffer_size * env.chunk_state);
-    request_send.resize(MPI_buffer_size);
-    request_recv.resize(MPI_buffer_size);
+    buffer3.resize(MPI_buffer_size * env.chunk_state);
+    buffer4.resize(MPI_buffer_size * env.chunk_state);
 }
 MEM_Runner::MEM_Runner() {
     if(env.is_MPI)
@@ -101,42 +101,32 @@ inline long long bit_string(long long &task, const vector<int> &targ){
 void MEM_Runner::run(vector<Gate *> &circuit) {
     for (auto &g : circuit) {
         vector<int> targ = g->targs;  // increasing
-        if(isMpi(g->targs[0]))
+        if(g->mpi_count)
         {
-            // int one_round_state = /*min((unsigned long long) env.MPI_buffer_size,1ULL << seg.N)*/ 1ULL << seg.N;
-            #pragma omp parallel
+            if(g->name == "Z_Gate_MEM" || g->name == "Phase_Gate_MEM" || g->name == "RZ_Gate_MEM") MPI_one_qubit_gate_diagonal(g);
+            else if(g->name == "CPhase_Gate_MEM" || g->name == "RZZ_Gate_MEM") MPI_two_qubit_gate_diagonal(g);
+            else
             {
-                int tid = omp_get_thread_num();
-                auto task = thread_tasks[tid];
-                task.tid = tid;
-                MPI_gate_scheduler(task,g);
-                // int per_state = min(env.thread_state,env.MPI_buffer_size * env.chunk_state);
-                // vector<complex<double>>buffer2(per_state);
-                // for(int i = tid * env.thread_state;i < ((tid + 1) * env.thread_state);i+=per_state)
-                // {
-                //     MPI_Sendrecv(&buffer[i],per_state,MPI_DOUBLE_COMPLEX,partner_rank,i,&buffer2[0],per_state,MPI_DOUBLE_COMPLEX,partner_rank,i,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-                //     long long off0 = i;
-                //     long long off1 = 0;
-                //     complex<double> q0;
-                //     complex<double> q1;
-                //     for (long long i = 0; i < per_state; i ++)
-                //     {
-                //         q0 = buffer[off0];
-                //         q1 = buffer2[off1];
-                //         buffer[off0] = 0.70710678118 * (q0 + q1);
-                //         off0 += 1; off1 += 1;
-                //     }
-                // }
+                #pragma omp parallel
+                {
+                    int tid = omp_get_thread_num();
+                    auto task = thread_tasks[tid];
+                    task.tid = tid;
+                    if(g->name == "SWAP_Gate_MEM") MPI_Swap_1_1(task,g);
+                    else MPI_gate_scheduler(task,g);
+                }
             }
-            continue;
         }
-        long long  n_task = 1ULL << (seg.N - targ.size());
-        int chunk_count = g->chunk_count;
-        long long incre = env.chunk_state / (1 << chunk_count);
-        #pragma omp parallel for schedule(static)
-        for (long long task = 0; task < n_task; task += incre) {
-            long long idx = bit_string(task, targ);
-            g->_run(buffer, idx);
+        else
+        {
+            long long  n_task = 1ULL << (seg.N - targ.size());
+            int chunk_count = g->chunk_count;
+            long long incre = env.chunk_state / (1 << chunk_count);
+            #pragma omp parallel for schedule(static)
+            for (long long task = 0; task < n_task; task += incre) {
+                long long idx = bit_string(task, targ);
+                g->_run(buffer, idx);
+            }
         }
     }
     // ed = omp_get_wtime();
@@ -154,14 +144,28 @@ void MEM_Runner::run(vector<vector<Gate *>> &subcircuits) {
         // printf("%d\n", i++);
         
         if (g.type == VSWAP) {
-            long long  n_task = 1ULL << (seg.N - targ.size());
-            int chunk_count = subcircuit[0]->chunk_count;
-            long long incre = env.chunk_state / (1 << chunk_count);
-            #pragma omp parallel for schedule(static)
-            for (long long task = 0; task < n_task; task += incre) {
-                long long idx = bit_string(task, targ);
-                for(auto &g : subcircuit) {
-                    g->_run(buffer, idx);
+            if(subcircuit[0]->mpi_count)
+            {
+                #pragma omp parallel
+                {
+                    int tid = omp_get_thread_num();
+                    auto task = thread_tasks[tid];
+                    task.tid = tid;
+                    if(subcircuit[0]->mpi_count == 1) MPI_Swap_1_1(task,subcircuit[0]);
+                    else MPI_Swap_2_2(task,subcircuit[0]);
+                }
+            }
+            else
+            {
+                long long  n_task = 1ULL << (seg.N - targ.size());
+                int chunk_count = subcircuit[0]->chunk_count;
+                long long incre = env.chunk_state / (1 << chunk_count);
+                #pragma omp parallel for schedule(static)
+                for (long long task = 0; task < n_task; task += incre) {
+                    long long idx = bit_string(task, targ);
+                    for(auto &g : subcircuit) {
+                        g->_run(buffer, idx);
+                    }
                 }
             }
         }
