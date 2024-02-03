@@ -359,8 +359,8 @@ void MEM_Runner::MPI_Swap_1_1(thread_MEM_task &task,Gate* &g)
     }
     else
     {
-        long long total_chunk_per_thread = env.thread_state / env.chunk_state;
-        long long per_chunk = min(total_chunk_per_thread,(long long)env.MPI_buffer_size);
+        int total_chunk_per_thread = env.thread_state / env.chunk_state;
+        int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
         task.partner_using = {env.rank ^ (1 << (g->targs[1] - seg.N))};
         if(g->chunk_count)
         {
@@ -394,8 +394,8 @@ void MEM_Runner::MPI_Swap_1_1(thread_MEM_task &task,Gate* &g)
                 }
                 else
                 {
-                    long long total_chunk_per_thread = (env.thread_state / env.chunk_state) >> 1;
-                    long long per_chunk = min(total_chunk_per_thread,(long long)env.MPI_buffer_size);
+                    int total_chunk_per_thread = (env.thread_state / env.chunk_state) >> 1;
+                    int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
                     for(long long i = 0;i < env.thread_state >> 1;i+=per_chunk * env.chunk_state)
                     {
                         long long startIdx = i + represent_thread * env.thread_state + (task.tid != represent_thread) * (env.thread_state >> 1);
@@ -425,8 +425,8 @@ void MEM_Runner::MPI_Swap_1_1(thread_MEM_task &task,Gate* &g)
                 //     }
                 // }
                 // algo faster
-                long long total_chunk_per_thread = (env.thread_state >> 1) / env.chunk_state;
-                long long per_chunk = min(total_chunk_per_thread,(long long)env.MPI_buffer_size);
+                int total_chunk_per_thread = (env.thread_state >> 1) / env.chunk_state;
+                int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
                 vector<complex<double>>buffer_tmp(per_chunk * env.chunk_state);
                 int chunk_cnt = 0;
                 unordered_map<int,int>m;
@@ -473,7 +473,7 @@ void MEM_Runner::MPI_Swap_2_2(thread_MEM_task &task,Gate* &g)
     int rank3 = rank0 | rank_mask_2 | rank_mask_3;
     unordered_map<int,int>rank_mapping{{rank0,0},{rank1,1},{rank2,2},{rank3,3}};
     int rank_order = rank_mapping[env.rank];
-    long long per_chunk = min(env.thread_state / env.chunk_state,(long long)env.MPI_buffer_size);
+    int per_chunk = min(env.thread_state / env.chunk_state,(long long)env.MPI_buffer_size);
     vector<MPI_Request*>request_send = {&task.request1_send,&task.request2_send,&task.request3_send};
     vector<MPI_Request*>request_recv = {&task.request1_recv,&task.request2_recv,&task.request3_recv};
     vector<vector<complex<double>>*>buffer_recv_using = {&task.buffer2,&task.buffer3,&task.buffer4};

@@ -30,8 +30,8 @@ public:
 
     string name;
     function<void (vector<complex<double>>& buffer)> run;
-    function<void (vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,int off0,int off1,int round)> run_one_qubit_mpi_io;
-    function<void (complex<double>*buffer1,complex<double>*buffer2,int off0,int off1,int round)> run_one_qubit_mpi_dio;
+    function<void (vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,long long off0,long long off1,int round)> run_one_qubit_mpi_io;
+    function<void (complex<double>*buffer1,complex<double>*buffer2,long long off0,long long off1,int round)> run_one_qubit_mpi_dio;
     function<void (vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,vector<complex<double>>&buffer3,vector<complex<double>>&buffer4,int round)> run_mpi_vswap2_2_io;
     function<void (complex<double>*buffer1,complex<double>*buffer2,complex<double>*buffer3,complex<double>*buffer4,int round)> run_mpi_vswap2_2_dio;
     function<void (complex<double> *buffer)> run_dio;  // DIO version
@@ -61,7 +61,7 @@ public:
     H_Gate(vector<int>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,long long,long long,int);
 };
 
 class X_Gate: public ONE_QUBIT_GATE
@@ -70,7 +70,7 @@ public:
     X_Gate(vector<int>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,long long,long long,int);
 };
 
 class Y_Gate: public ONE_QUBIT_GATE
@@ -79,7 +79,7 @@ public:
     Y_Gate(vector<int>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,long long,long long,int);
 };
 
 class Z_Gate: public ONE_QUBIT_GATE
@@ -97,7 +97,7 @@ public:
     U1_Gate(vector<int>, vector<complex<double>>);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,long long,long long,int);
 };
 
 class Phase_Gate: public ONE_QUBIT_GATE
@@ -118,7 +118,7 @@ public:
     RX_Gate(vector<int>, double);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,long long,long long,int);
 };
 
 class RY_Gate: public ONE_QUBIT_GATE
@@ -130,7 +130,7 @@ public:
     RY_Gate(vector<int>, double);
     void run_chunk(vector<complex<double>> &);
     void run_nonchunk(vector<complex<double>> &);
-    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,long long,long long,int);
 };
 
 class RZ_Gate: public ONE_QUBIT_GATE
@@ -163,7 +163,7 @@ public:
     void run_chunk_chunk(vector<complex<double>> &);
     void run_nonchunk_chunk(vector<complex<double>> &);
     void run_nonchunk_nonchunk(vector<complex<double>> &);
-    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,int,int,int);
+    void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,long long,long long,int);
 };
 
 class SWAP_Gate: public TWO_QUBIT_GATE
@@ -173,7 +173,7 @@ public:
     void run_chunk_chunk(vector<complex<double>> &);
     void run_nonchunk_chunk(vector<complex<double>> &);
     void run_nonchunk_nonchunk(vector<complex<double>> &);
-    void run_mpi_nonchunk_chunk(vector<complex<double>>&,vector<complex<double>>&,int,int,int);
+    void run_mpi_nonchunk_chunk(vector<complex<double>>&,vector<complex<double>>&,long long,long long,int);
 };
 
 class VSWAP_Gate_1_1: public SWAP_Gate
@@ -337,7 +337,7 @@ public:
     H_Gate_DIO(vector<int>);
     void run_chunk(complex<double> *);
     void run_nonchunk(complex<double> *);
-    void run_mpi_chunk(complex<double>*,complex<double>*,int,int,int);
+    void run_mpi_chunk(complex<double>*,complex<double>*,long long,long long,int);
 };
 
 class X_Gate_DIO: public ONE_QUBIT_GATE
@@ -346,7 +346,7 @@ public:
     X_Gate_DIO(vector<int>);
     void run_chunk(complex<double> *);
     void run_nonchunk(complex<double> *);
-    void run_mpi_chunk(complex<double>*,complex<double>*,int,int,int);
+    void run_mpi_chunk(complex<double>*,complex<double>*,long long,long long,int);
 };
 
 class Y_Gate_DIO: public ONE_QUBIT_GATE
@@ -355,7 +355,7 @@ public:
     Y_Gate_DIO(vector<int>);
     void run_chunk(complex<double> *);
     void run_nonchunk(complex<double> *);
-    void run_mpi_chunk(complex<double>*,complex<double>*,int,int,int);
+    void run_mpi_chunk(complex<double>*,complex<double>*,long long,long long,int);
 };
 
 class Z_Gate_DIO: public ONE_QUBIT_GATE
@@ -373,7 +373,7 @@ public:
     U1_Gate_DIO(vector<int>, vector<complex<double>>);
     void run_chunk(complex<double> *);
     void run_nonchunk(complex<double> *);
-    void run_mpi_chunk(complex<double>*,complex<double>*,int,int,int);
+    void run_mpi_chunk(complex<double>*,complex<double>*,long long,long long,int);
 };
 
 class Phase_Gate_DIO: public ONE_QUBIT_GATE
@@ -394,7 +394,7 @@ public:
     RX_Gate_DIO(vector<int>, double);
     void run_chunk(complex<double> *);
     void run_nonchunk(complex<double> *);
-    void run_mpi_chunk(complex<double>*,complex<double>*,int,int,int);
+    void run_mpi_chunk(complex<double>*,complex<double>*,long long,long long,int);
 };
 
 class RY_Gate_DIO: public ONE_QUBIT_GATE
@@ -406,7 +406,7 @@ public:
     RY_Gate_DIO(vector<int>, double);
     void run_chunk(complex<double> *);
     void run_nonchunk(complex<double> *);
-    void run_mpi_chunk(complex<double>*,complex<double>*,int,int,int);
+    void run_mpi_chunk(complex<double>*,complex<double>*,long long,long long,int);
 };
 
 class RZ_Gate_DIO: public ONE_QUBIT_GATE
@@ -429,7 +429,7 @@ public:
     void run_chunk_chunk(complex<double> *);
     void run_nonchunk_chunk(complex<double> *);
     void run_nonchunk_nonchunk(complex<double> *);
-    void run_mpi_chunk(complex<double>*,complex<double>*,int,int,int);
+    void run_mpi_chunk(complex<double>*,complex<double>*,long long,long long,int);
 };
 
 class SWAP_Gate_DIO: public TWO_QUBIT_GATE
@@ -439,7 +439,7 @@ public:
     void run_chunk_chunk(complex<double> *);
     void run_nonchunk_chunk(complex<double> *);
     void run_nonchunk_nonchunk(complex<double> *);
-    void run_mpi_nonchunk_chunk(complex<double>*,complex<double>*,int,int,int);
+    void run_mpi_nonchunk_chunk(complex<double>*,complex<double>*,long long,long long,int);
 };
 
 class VSWAP_Gate_1_1_DIO: public SWAP_Gate_DIO

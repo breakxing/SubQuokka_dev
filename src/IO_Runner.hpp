@@ -39,7 +39,6 @@ class IO_Runner: public Simulator::circuitRunner {
     void setFD(thread_IO_task &, Gate * &);
     void setFD_sub(thread_IO_task &);
     void MPI_Swap(thread_IO_task &,Gate * &);
-    void _thread_MPI_swap(thread_IO_task &,Gate * &,bool &);
     void MPI_gate_scheduler(thread_IO_task &,Gate * &);
     void _two_gate_mpi_read1_recv1(thread_IO_task &,Gate * &);
     void _mpi_one_gate_inner(thread_IO_task &,Gate * &);

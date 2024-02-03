@@ -38,7 +38,6 @@ class DIO_Runner: public Simulator::circuitRunner {
     void setFD(thread_DIO_task &, Gate * &);
     void setFD_sub(thread_DIO_task &);
     void MPI_Swap(thread_DIO_task &,Gate * &);
-    void _thread_MPI_swap(thread_DIO_task &,Gate * &,bool &);
     void MPI_gate_scheduler(thread_DIO_task &,Gate * &);
     void _two_gate_mpi_read1_recv1(thread_DIO_task &,Gate * &);
     void _mpi_one_gate_inner(thread_DIO_task &,Gate * &);
