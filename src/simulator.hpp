@@ -47,7 +47,7 @@ bool isMpi(int);
 bool isFile(int);
 bool isMiddle(int);
 bool isChunk(int);
-
+void check_targ_in_N(vector<int>);
 class Simulator
 {
     std::vector<Gate *> circuit; // 全部的 gateMap
@@ -69,7 +69,6 @@ class Simulator
     void setupSubCircuits_MEM(std::string);
 
     void setupStateFile();
-    void check_targ_in_N(vector<int>);
 public:
     class circuitRunner;
     friend class circuitRunner;

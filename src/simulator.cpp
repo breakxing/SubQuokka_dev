@@ -758,7 +758,7 @@ Simulator::~Simulator() {
 //     }
 // }
 
-void Simulator::check_targ_in_N(vector<int>targs)
+void check_targ_in_N(vector<int>targs)
 {
     for(auto &x:targs)
     {
