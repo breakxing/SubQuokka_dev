@@ -211,7 +211,10 @@ void Simulator::setupIni(string ini) {
             std::cout<<"DIO Mode\n";
         Runner = new DIO_Runner();
     } else if (env.runner_type == "MEM" || env.runner_type == "MPI_MEM") {
-        std::cout<<"MEM Mode\n";
+        if(env.runner_type == "MEM")
+            std::cout<<"MEM Mode\n";
+        else
+            cout<<"MPI_MEM Mode\n";
         Runner = new MEM_Runner();
     } else if (env.runner_type == "RDMA") {
         cerr << "[Config File]: RDMA runner not found." << endl;
@@ -288,8 +291,14 @@ T *setGate_vswap(stringstream &ss, int swap_size){
     }
     if(env.is_MPI && targ.size() > 4)
     {
-        cerr << "[setGate]: Not implemented yet." << endl;
-        exit(1);
+        for(auto &x:targ)
+        {
+            if(isMpi(x))
+            {
+                cerr << "[setGate]: Not implemented yet." << endl;
+                exit(1);
+            }
+        }
     }
     return new T(targ);
 }
@@ -326,8 +335,14 @@ Gate *setUnitary(stringstream &ss, int n_qubits) {
     }
     if(env.is_MPI && targ.size() > 2)
     {
-        cerr << "[setGate]: Not implemented yet." << endl;
-        exit(1);
+        for(auto &x:targ)
+        {
+            if(isMpi(x))
+            {
+                cerr << "[setGate]: Not implemented yet." << endl;
+                exit(1);
+            }
+        }
     }
     return new T(targ, coeff);
 }
