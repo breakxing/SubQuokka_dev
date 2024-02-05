@@ -69,6 +69,7 @@ class Simulator
     void setupSubCircuits_MEM(std::string);
 
     void setupStateFile();
+    void check_targ_in_N(vector<int>);
 public:
     class circuitRunner;
     friend class circuitRunner;

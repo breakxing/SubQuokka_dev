@@ -258,6 +258,7 @@ T *setGate_1(stringstream &ss){
     int target;
     ss >> target;
     vector<int> targ{target};
+    check_targ_in_N(targ);
     return new T(targ);
 }
 
@@ -267,6 +268,7 @@ T *setGate_2(stringstream &ss){
     int target1;
     ss >> target0 >> target1;
     vector<int> targ{target0, target1};
+    check_targ_in_N(targ);
     return new T(targ);
 }
 
@@ -278,6 +280,7 @@ T *setGate_3(stringstream &ss){
     int target2;
     ss >> target0 >> target1 >> target2;
     vector<int> targ{target0, target1, target2};
+    check_targ_in_N(targ);
     return new T(targ);
 }
 
@@ -289,6 +292,7 @@ T *setGate_vswap(stringstream &ss, int swap_size){
         ss >> temp;
         targ.push_back(temp);
     }
+    check_targ_in_N(targ);
     if(env.is_MPI && targ.size() > 4)
     {
         for(auto &x:targ)
@@ -311,6 +315,7 @@ T *setGate_Phase(stringstream &ss, int n_qubits) {
         ss >> target;
         targ.push_back(target);
     }
+    check_targ_in_N(targ);
     double phi;
     ss >> phi;
     return new T(targ, phi);
@@ -324,7 +329,7 @@ Gate *setUnitary(stringstream &ss, int n_qubits) {
         ss >> target;
         targ.push_back(target);
     }
-
+    check_targ_in_N(targ);
     int n_coeff = 1ULL << (2*n_qubits);
     double re;
     double im;
@@ -752,3 +757,15 @@ Simulator::~Simulator() {
 //         pwrite(env.fd_arr[task.fd_using[j]], &(task.buffer[j * env.chunk_state]), env.chunk_size, task.fd_offset_using[j]);
 //     }
 // }
+
+void Simulator::check_targ_in_N(vector<int>targs)
+{
+    for(auto &x:targs)
+    {
+        if(x >= seg.N + seg.mpi)
+        {
+            cerr << "[setGate]: Not implemented yet." << endl;
+            exit(1);
+        }
+    }
+}
