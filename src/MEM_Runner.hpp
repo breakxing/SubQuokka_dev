@@ -1,6 +1,7 @@
 #ifndef MEM_RUNNER_HPP
 #define MEM_RUNNER_HPP
 #include <mpi.h>
+#include <stack>
 #include "simulator.hpp"
 void process_mem_usage(double& vm_usage, double& resident_set);
 class thread_MEM_task
@@ -33,6 +34,10 @@ public:
     void MPI_two_qubit_gate_diagonal(Gate* &);
     void MPI_Swap_1_1(thread_MEM_task &,Gate* &g);
     void MPI_Swap_2_2(thread_MEM_task &,Gate* &g);
+    void MPI_CPhase(Gate* &,unsigned long long);
+    void MPI_RZZ(Gate* &,unsigned long long,int);
+    void MPI_Swap_restore(vector<complex<double>>&,stack<unsigned long long>&,unsigned long long);
+
 };
 
 

@@ -14,10 +14,10 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
 {
     if(g->targs.size() == 1)
     {
-        long long rank_mask_0 = 1 << (g->targs[0] - seg.N);
+        int rank_mask_0 = 1 << (g->targs[0] - seg.N);
         int partner_rank = env.rank ^ rank_mask_0;
-        long long total_chunk_per_thread = env.thread_state / env.chunk_state;
-        long long per_chunk = min(total_chunk_per_thread,(long long)env.MPI_buffer_size);
+        int total_chunk_per_thread = env.thread_state / env.chunk_state;
+        int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
         task.partner_using = {partner_rank};
         long long startIdx;
         for(long long i = 0;i < env.thread_state;i+=per_chunk * env.chunk_state)
@@ -38,7 +38,7 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
             int rank3 = rank0 | rank_mask_0 | rank_mask_1;
             unordered_map<int,int>rank_mapping{{rank0,0},{rank1,1},{rank2,2},{rank3,3}};
             int rank_order = rank_mapping[env.rank];
-            long long per_chunk = min(env.thread_state / env.chunk_state,(long long)env.MPI_buffer_size);
+            int per_chunk = min(env.thread_state / env.chunk_state,(long long)env.MPI_buffer_size);
             vector<MPI_Request*>request_send = {&task.request1_send,&task.request2_send,&task.request3_send};
             vector<MPI_Request*>request_recv = {&task.request1_recv,&task.request2_recv,&task.request3_recv};
             vector<vector<complex<double>>*>buffer_recv_using = {&task.buffer2,&task.buffer3,&task.buffer4};
@@ -119,8 +119,8 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
             int t0 = task.tid & (~thread_mask);
             int t1 = task.tid | thread_mask;
             bool thread_equal_chunk = (env.thread_state == env.chunk_state);
-            long long total_chunk_per_thread = env.thread_state / env.chunk_state / 2;
-            long long per_chunk = min(total_chunk_per_thread,(long long)env.MPI_buffer_size);
+            int total_chunk_per_thread = env.thread_state / env.chunk_state / 2;
+            int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
             long long pos0;
             long long pos1;
             long long pos2;
@@ -203,8 +203,8 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
         {
             int rank_mask_1 = 1 << (g->targs[1] - seg.N);
             int partner_rank = env.rank ^ rank_mask_1;
-            long long total_chunk_per_thread = env.qubit_offset[g->targs[0]] / env.chunk_state;
-            long long per_chunk = min(total_chunk_per_thread,(long long)env.MPI_buffer_size / 2);
+            int total_chunk_per_thread = env.qubit_offset[g->targs[0]] / env.chunk_state;
+            int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size >> 1);
             long long pos0;
             long long pos1;
             long long pos2;
@@ -248,8 +248,8 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
         }
         else
         {
-            long long total_chunk_per_thread = env.thread_state / env.chunk_state;
-            long long per_chunk = min(total_chunk_per_thread,(long long)env.MPI_buffer_size);
+            int total_chunk_per_thread = env.thread_state / env.chunk_state;
+            int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
             task.partner_using = {env.rank ^ (1 << (g->targs[1] - seg.N))};
             for(long long i = 0;i < env.thread_state;i+=per_chunk * env.chunk_state)
             {
@@ -266,7 +266,7 @@ void MEM_Runner::MPI_one_qubit_gate_diagonal(Gate* &g)
     unordered_map<int,int>rank_mapping{{rank0,0},{rank1,1}};
     int rank_order = rank_mapping[env.rank];
     #pragma omp parallel for schedule(static)
-    for(long long i = 0;i < (1 << seg.N);i+=env.chunk_state)
+    for(unsigned long long i = 0;i < (1ULL << seg.N);i+=env.chunk_state)
     {
         g->run_one_qubit_mpi_mem_diagonal(buffer,i,rank_order,env.chunk_state);
     }
@@ -285,43 +285,42 @@ void MEM_Runner::MPI_two_qubit_gate_diagonal(Gate* &g)
         int rank_order = rank_mapping[env.rank];
         if(g->name == "CPhase_Gate_MEM" && rank_order != 3) return;
         #pragma omp parallel for schedule(static)
-        for(long long i = 0;i < (1 << seg.N);i+=env.chunk_state)
+        for(unsigned long long i = 0;i < (1ULL << seg.N);i+=env.chunk_state)
         {
             g->run_one_qubit_mpi_mem_diagonal(buffer,i,rank_order,env.chunk_state);
         }
     }
     else
     {
-        long long stride = env.qubit_offset[g->targs[0] + 1];
+        unsigned long long stride = env.qubit_offset[g->targs[0]] << 1;
         if(g->name == "CPhase_Gate_MEM")
         {
-            if(env.rank != (env.rank | (1 << (g->targs[1] - seg.N)))) return;
             #pragma omp parallel for schedule(static)
-            for(long long i = 0;i < (1 << seg.N);i+=stride)
+            for(unsigned long long i = 0;i < (1ULL << seg.N);i+=stride)
             {
-                g->run_one_qubit_mpi_mem_diagonal(buffer,i + (stride >> 1),3,stride >> 1);
+                MPI_CPhase(g,i);
             }
         }
         else
         {
             int rank_off = (env.rank == (env.rank | (1 << (g->targs[1] - seg.N)))) << 1;
             #pragma omp parallel for schedule(static)
-            for(long long i = 0;i < (1 << seg.N);i+=stride)
+            for(unsigned long long i = 0;i < (1ULL << seg.N);i+=stride)
             {
-                g->run_one_qubit_mpi_mem_diagonal(buffer,i,rank_off,stride >> 1);
-                g->run_one_qubit_mpi_mem_diagonal(buffer,i + (stride >> 1),rank_off | 1,stride >> 1);
+                MPI_RZZ(g,i,rank_off);
             }
+
         }
     }
 }
 void MEM_Runner::_mpi_one_gate_inner(thread_MEM_task &task,Gate* &g,long long startIdx)
 {
     int partner_rank = task.partner_using[0];
-    long long per_chunk = min(env.thread_state / env.chunk_state,(long long)env.MPI_buffer_size);
+    int per_chunk = min(env.thread_state / env.chunk_state,(long long)env.MPI_buffer_size);
     vector<complex<double>>*buffer1_ptr = &buffer;
     vector<complex<double>>*buffer2_ptr = &task.buffer2;
-    int pos1 = startIdx;
-    int pos2 = 0;
+    long long pos1 = startIdx;
+    long long pos2 = 0;
     if(env.rank > partner_rank)
     {
         swap(buffer1_ptr,buffer2_ptr);
@@ -347,8 +346,8 @@ void MEM_Runner::MPI_Swap_1_1(thread_MEM_task &task,Gate* &g)
         unordered_map<int,int>rank_mapping{{rank0,0},{rank1,1},{rank2,2},{rank3,3}};
         int rank_order = rank_mapping[env.rank];
         if(rank_order == 0 || rank_order == 3) return;
-        long long total_chunk_per_thread = env.thread_state / env.chunk_state;
-        long long per_chunk = min(total_chunk_per_thread,(long long)env.MPI_buffer_size);
+        int total_chunk_per_thread = env.thread_state / env.chunk_state;
+        int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
         task.partner_using = {env.rank == rank1? rank2 : rank1};
         long long startIdx;
         for(long long i = 0;i < env.thread_state;i+=per_chunk * env.chunk_state)
@@ -364,11 +363,25 @@ void MEM_Runner::MPI_Swap_1_1(thread_MEM_task &task,Gate* &g)
         task.partner_using = {env.rank ^ (1 << (g->targs[1] - seg.N))};
         if(g->chunk_count)
         {
-            long long startIdx;
-            for(long long i = 0;i < env.thread_state;i+=per_chunk * env.chunk_state)
+            long long total_state_per_thread = env.thread_state >> 1;
+            long long per_state = min(total_state_per_thread,env.MPI_buffer_size * env.chunk_state);
+            unsigned long long one_time_state = env.qubit_offset[g->targs[0]];
+            vector<complex<double>>buffer_tmp(per_state);
+            stack<unsigned long long>st;
+            for(long long i = 0;i < env.thread_state;i+=env.qubit_offset[g->targs[0] + 1])
             {
-                startIdx = task.tid * env.thread_state + i;
-                _mpi_one_gate_inner(task,g,startIdx);
+                long long startIdx = task.tid * env.thread_state + i + (env.rank < task.partner_using[0]) * env.qubit_offset[g->targs[0]];
+                copy(buffer.begin() + startIdx,buffer.begin() + startIdx + one_time_state,buffer_tmp.begin() + st.size() * one_time_state);
+                st.push(startIdx);
+                if(st.size() * one_time_state == (unsigned long int)per_state)
+                {
+                    MPI_Isend(&buffer_tmp[0],per_state,MPI_DOUBLE_COMPLEX,task.partner_using[0],task.tid,MPI_COMM_WORLD,&task.request1_send);
+                    MPI_Irecv(&task.buffer2[0],per_state,MPI_DOUBLE_COMPLEX,task.partner_using[0],task.tid,MPI_COMM_WORLD,&task.request1_recv);
+                    MPI_Wait(&task.request1_recv,MPI_STATUS_IGNORE);
+                    MPI_Wait(&task.request1_send,MPI_STATUS_IGNORE);
+                    g->run_one_qubit_mpi_mem(buffer_tmp,task.buffer2,0,0,per_state);
+                    MPI_Swap_restore(buffer_tmp,st,one_time_state);
+                }
             }
         }
         else
@@ -394,8 +407,8 @@ void MEM_Runner::MPI_Swap_1_1(thread_MEM_task &task,Gate* &g)
                 }
                 else
                 {
-                    int total_chunk_per_thread = (env.thread_state / env.chunk_state) >> 1;
-                    int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
+                    total_chunk_per_thread = (env.thread_state / env.chunk_state) >> 1;
+                    per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
                     for(long long i = 0;i < env.thread_state >> 1;i+=per_chunk * env.chunk_state)
                     {
                         long long startIdx = i + represent_thread * env.thread_state + (task.tid != represent_thread) * (env.thread_state >> 1);
@@ -409,41 +422,24 @@ void MEM_Runner::MPI_Swap_1_1(thread_MEM_task &task,Gate* &g)
             }
             else
             {
-                int partner_rank = env.rank ^ (1 << (g->targs[1] - seg.N));
-                // long long block_chunk = env.qubit_offset[g->targs[0]] / env.chunk_state;
-                // long long per_chunk = min((long long)env.MPI_buffer_size,block_chunk);
-                // for(long long i = 0;i < env.thread_state;i+=env.qubit_offset[g->targs[0] + 1])
-                // {
-                //     long long base = task.tid * env.thread_state + i + (env.rank < partner_rank) * env.qubit_offset[g->targs[0]];
-                //     for(int j = 0;j < block_chunk;j+=per_chunk)
-                //     {
-                //         MPI_Isend(&buffer[base + j * env.chunk_state],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request1_send);
-                //         MPI_Irecv(&task.buffer2[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request1_recv);
-                //         MPI_Wait(&task.request1_recv,MPI_STATUS_IGNORE);
-                //         MPI_Wait(&task.request1_send,MPI_STATUS_IGNORE);
-                //         g->run_one_qubit_mpi_mem(buffer,task.buffer2,base + j * env.chunk_state,0,per_chunk * env.chunk_state);
-                //     }
-                // }
-                // algo faster
-                int total_chunk_per_thread = (env.thread_state >> 1) / env.chunk_state;
-                int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
+                total_chunk_per_thread = (env.thread_state >> 1) / env.chunk_state;
+                per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
                 vector<complex<double>>buffer_tmp(per_chunk * env.chunk_state);
-                int chunk_cnt = 0;
-                unordered_map<int,int>m;
+                stack<unsigned long long>st;
                 for(long long i = 0;i < env.thread_state;i+=env.qubit_offset[g->targs[0] + 1])
                 {
                     for(long long j = 0;j < env.qubit_offset[g->targs[0]];j+=env.chunk_state)
                     {
-                        long long startIdx = task.tid * env.thread_state + i + j + (env.rank < partner_rank) * env.qubit_offset[g->targs[0]];
-                        copy(buffer.begin() + startIdx,buffer.begin() + startIdx + env.chunk_state,buffer_tmp.begin() + chunk_cnt * env.chunk_state);
-                        m[chunk_cnt++] = startIdx;
-                        if(chunk_cnt == per_chunk)
+                        long long startIdx = task.tid * env.thread_state + i + j + (env.rank < task.partner_using[0]) * env.qubit_offset[g->targs[0]];
+                        copy(buffer.begin() + startIdx,buffer.begin() + startIdx + env.chunk_state,buffer_tmp.begin() + st.size() * env.chunk_state);
+                        st.push(startIdx);
+                        if(st.size() == (unsigned long int)per_chunk)
                         {
-                            MPI_Isend(&buffer_tmp[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request1_send);
-                            MPI_Irecv(&task.buffer2[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request1_recv);
+                            MPI_Isend(&buffer_tmp[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[0],task.tid,MPI_COMM_WORLD,&task.request1_send);
+                            MPI_Irecv(&task.buffer2[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[0],task.tid,MPI_COMM_WORLD,&task.request1_recv);
                             MPI_Wait(&task.request1_recv,MPI_STATUS_IGNORE);
                             MPI_Wait(&task.request1_send,MPI_STATUS_IGNORE);
-                            if(env.rank < partner_rank)
+                            if(env.rank < task.partner_using[0])
                             {
                                 g->run_one_qubit_mpi_mem(buffer_tmp,task.buffer2,0,0,per_chunk * env.chunk_state);
                             }
@@ -451,11 +447,7 @@ void MEM_Runner::MPI_Swap_1_1(thread_MEM_task &task,Gate* &g)
                             {
                                 g->run_one_qubit_mpi_mem(task.buffer2,buffer_tmp,0,0,per_chunk * env.chunk_state);
                             }
-                            chunk_cnt = 0;
-                            for(int q = 0;q < per_chunk;q++)
-                            {
-                                copy(buffer_tmp.begin() + q * env.chunk_state,buffer_tmp.begin() + (q + 1) * env.chunk_state,buffer.begin() + m[q]);
-                            }
+                            MPI_Swap_restore(buffer_tmp,st,env.chunk_state);
                         }
                     }
                 }
@@ -529,5 +521,59 @@ void MEM_Runner::MPI_Swap_2_2(thread_MEM_task &task,Gate* &g)
         }
         *local_pos = i;
         g->run_mpi_vswap2_2_mem(*buffer1_ptr,*buffer2_ptr,*buffer3_ptr,*buffer4_ptr,pos0,pos1,pos2,pos3,per_chunk * env.chunk_state);
+    }
+}
+void MEM_Runner::MPI_CPhase(Gate* &g,unsigned long long idx)
+{
+    unsigned long long half_stride = env.qubit_offset[g->targs[0]];
+    CPhase_Gate_MEM* cphaseGatePtr = static_cast<CPhase_Gate_MEM*>(g);
+    complex<double> q0;
+    idx += half_stride;
+    for (unsigned long long q = 0; q < half_stride; q ++)
+    {
+        buffer[idx] *= cphaseGatePtr->exp_iPhi;
+        idx += 1;
+    }
+}
+void MEM_Runner::MPI_RZZ(Gate* &g,unsigned long long idx,int rank_off)
+{
+    unsigned long long half_stride = env.qubit_offset[g->targs[0]];
+    RZZ_Gate_MEM* rzzGatePtr = static_cast<RZZ_Gate_MEM*>(g);
+    unsigned long long off0 = idx;
+    unsigned long long off1 = idx + half_stride;
+    int pos0 = rank_off;
+    int pos1 = rank_off | 1;
+    for (unsigned long long i = 0; i < half_stride; i++)
+    {
+        if(pos0 == 0 || pos0 == 3)
+        {
+            buffer[off0] *= rzzGatePtr->exp_n_iPhi_2;
+        }
+        else
+        {
+            buffer[off0] *= rzzGatePtr->exp_p_iPhi_2;
+        }
+        if(pos1 == 0 || pos1 == 3)
+        {
+            buffer[off1] *= rzzGatePtr->exp_n_iPhi_2;
+        }
+        else
+        {
+            buffer[off1] *= rzzGatePtr->exp_p_iPhi_2;
+        }
+        off0 += 1;
+        off1 += 1;
+    }
+}
+
+void MEM_Runner::MPI_Swap_restore(vector<complex<double>>&buffer_tmp,stack<unsigned long long>&st,unsigned long long size)
+{
+    unsigned long long buffer_size = st.size() * size;
+    buffer_size -= size;
+    while(!st.empty())
+    {
+        unsigned long long off = st.top();st.pop();
+        copy(buffer_tmp.begin() + buffer_size,buffer_tmp.begin() + buffer_size + size,buffer.begin() + off);
+        buffer_size -= size;
     }
 }

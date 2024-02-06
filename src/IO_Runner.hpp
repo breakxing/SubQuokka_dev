@@ -3,6 +3,7 @@
 
 #include "simulator.hpp"
 #include <mpi.h>
+#include <stack>
 class thread_IO_task
 {
 public:

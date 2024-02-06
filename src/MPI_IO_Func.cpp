@@ -330,23 +330,22 @@ void IO_Runner::MPI_Swap(thread_IO_task &task,Gate * &g)
         task.fd_using = {env.fd_arr[task.tid]};
         int total_chunk_per_thread = (env.thread_state >> 1) / env.chunk_state;
         int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
-        int chunk_cnt = 0;
-        unordered_map<int,long long>m;
+        stack<unsigned long long>st;
         for(long long i = 0;i < loop_bound;i+=env.qubit_size[g->targs[0] + 1])
         {
             for(long long j = 0;j < env.qubit_size[g->targs[0]];j+=env.chunk_size)
             {
                 long long startIdx = i + j + (env.rank < task.partner_using[0]) * env.qubit_size[g->targs[0]];
-                if(pread(task.fd_using[0],&task.buffer1[chunk_cnt * env.chunk_state],env.chunk_size,startIdx));
-                m[chunk_cnt++] = startIdx;
-                if(chunk_cnt == per_chunk)
+                if(pread(task.fd_using[0],&task.buffer1[st.size() * env.chunk_state],env.chunk_size,startIdx));
+                st.push(startIdx);
+                if(st.size() == (unsigned long int)per_chunk)
                 {
                     MPI_Sendrecv(&task.buffer1[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[0],task.tid,&task.buffer2[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[0],task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
                     for(int q = 0;q < per_chunk;q++)
                     {
-                        if(pwrite(task.fd_using[0],&task.buffer2[q * env.chunk_state],env.chunk_size,m[q]));
+                        if(pwrite(task.fd_using[0],&task.buffer2[q * env.chunk_state],env.chunk_size,st.top()));
+                        st.pop();
                     }
-                    chunk_cnt = 0;
                 }
             }
         }

@@ -2903,7 +2903,7 @@ void SWAP_Gate_MEM::run_mpi_mpi(vector<complex<double>>&buffer1,vector<complex<d
 }
 
 void SWAP_Gate_MEM::run_mpi_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,long long offset0,long long offset1,long long length){
-    mpi_nonchunk_chunk_mem(init_off2(long long, offset0 + half_off_0, offset1),length, update_off2(1),update_off2(half_off_0),SWAPGateMPIChunk)
+    mpi_gate_mem(init_off2(long long, offset0, offset1),length, update_off2(1), SWAPGateMPIChunk)
 }
 
 void SWAP_Gate_MEM::run_mpi_file_middle(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,long long offset0,long long offset1,long long length){
