@@ -165,10 +165,6 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
             {
                 startIdx0 = t0 * env.thread_state + (task.tid != t0) * (env.thread_state >> 1);
                 startIdx1 = t1 * env.thread_state + (task.tid != t0) * (env.thread_state >> 1);
-                pos0 = startIdx0;
-                pos1 = startIdx1;
-                pos2 = 0;
-                pos3 = 0;
                 buffer1_ptr = &buffer;
                 buffer2_ptr = &buffer;
                 buffer3_ptr = &task.buffer2;
@@ -182,6 +178,8 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
                 {
                     pos0 = i + startIdx0;
                     pos1 = i + startIdx1;
+                    pos2 = 0;
+                    pos3 = 0;
                     if(env.rank > partner_rank)
                     {
                         swap(pos0,pos2);
