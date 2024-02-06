@@ -764,7 +764,7 @@ void check_targ_in_N(vector<int>targs)
     {
         if(x >= seg.N + seg.mpi)
         {
-            cerr << "[setGate]: Not implemented yet." << endl;
+            cerr << "[setGate]: Qubit Index Error" << endl;
             exit(1);
         }
     }
