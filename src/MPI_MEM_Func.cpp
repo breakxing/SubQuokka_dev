@@ -293,6 +293,7 @@ void MEM_Runner::MPI_two_qubit_gate_diagonal(Gate* &g)
         unsigned long long stride = env.qubit_offset[g->targs[0]] << 1;
         if(g->name == "CPhase_Gate_MEM")
         {
+            if(env.rank < (1 <<(g->targs[1] - seg.N))) return;
             #pragma omp parallel for schedule(static)
             for(unsigned long long i = 0;i < (1ULL << seg.N);i+=stride)
             {
@@ -301,11 +302,10 @@ void MEM_Runner::MPI_two_qubit_gate_diagonal(Gate* &g)
         }
         else
         {
-            int rank_off = (env.rank == (env.rank | (1 << (g->targs[1] - seg.N)))) << 1;
             #pragma omp parallel for schedule(static)
             for(unsigned long long i = 0;i < (1ULL << seg.N);i+=stride)
             {
-                MPI_RZZ(g,i,rank_off);
+                MPI_RZZ(g,i);
             }
 
         }
@@ -533,31 +533,24 @@ void MEM_Runner::MPI_CPhase(Gate* &g,unsigned long long idx)
         idx += 1;
     }
 }
-void MEM_Runner::MPI_RZZ(Gate* &g,unsigned long long idx,int rank_off)
+void MEM_Runner::MPI_RZZ(Gate* &g,unsigned long long idx)
 {
     unsigned long long half_stride = env.qubit_offset[g->targs[0]];
     RZZ_Gate_MEM* rzzGatePtr = static_cast<RZZ_Gate_MEM*>(g);
     unsigned long long off0 = idx;
     unsigned long long off1 = idx + half_stride;
-    int pos0 = rank_off;
-    int pos1 = rank_off | 1;
+    int rank_order = env.rank == (env.rank | 1 << (g->targs[1] - seg.N));
     for (unsigned long long i = 0; i < half_stride; i++)
     {
-        if(pos0 == 0 || pos0 == 3)
+        if(rank_order == 0)
         {
             buffer[off0] *= rzzGatePtr->exp_n_iPhi_2;
+            buffer[off1] *= rzzGatePtr->exp_p_iPhi_2;
         }
         else
         {
             buffer[off0] *= rzzGatePtr->exp_p_iPhi_2;
-        }
-        if(pos1 == 0 || pos1 == 3)
-        {
             buffer[off1] *= rzzGatePtr->exp_n_iPhi_2;
-        }
-        else
-        {
-            buffer[off1] *= rzzGatePtr->exp_p_iPhi_2;
         }
         off0 += 1;
         off1 += 1;

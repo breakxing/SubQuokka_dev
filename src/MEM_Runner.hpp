@@ -35,7 +35,7 @@ public:
     void MPI_Swap_1_1(thread_MEM_task &,Gate* &g);
     void MPI_Swap_2_2(thread_MEM_task &,Gate* &g);
     void MPI_CPhase(Gate* &,unsigned long long);
-    void MPI_RZZ(Gate* &,unsigned long long,int);
+    void MPI_RZZ(Gate* &,unsigned long long);
     void MPI_Swap_restore(vector<complex<double>>&,stack<unsigned long long>&,unsigned long long);
 
 };
