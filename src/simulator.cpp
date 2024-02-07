@@ -173,7 +173,10 @@ void setENV(INIReader &reader) {
         temp_offset *= 2;
         temp_size *= 2;
     }
-
+    if(env.is_MPI)
+    {
+        assert(env.MPI_buffer_size >= 4);
+    }
     // printf("is density: %d\n", IsDensity);
     if(env.runner_type != "MEM" && env.runner_type != "MPI_MEM")
     {

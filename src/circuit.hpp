@@ -33,6 +33,8 @@ public:
     function<void (vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,long long off0,long long off1,int round)> run_one_qubit_mpi_io;
     function<void (complex<double>*buffer1,complex<double>*buffer2,long long off0,long long off1,int round)> run_one_qubit_mpi_dio;
     function<void (vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,vector<complex<double>>&buffer3,vector<complex<double>>&buffer4,int round)> run_mpi_vswap2_2_io;
+    function<void (vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,vector<complex<double>>&buffer3,vector<complex<double>>&buffer4,int round)> run_mpi_u2_nonchunk_io;
+    function<void (complex<double>*buffer1,complex<double>*buffer2,complex<double>*buffer3,complex<double>*buffer4,int round)> run_mpi_u2_nonchunk_dio;
     function<void (complex<double>*buffer1,complex<double>*buffer2,complex<double>*buffer3,complex<double>*buffer4,int round)> run_mpi_vswap2_2_dio;
     function<void (complex<double> *buffer)> run_dio;  // DIO version
     function<void (vector<complex<double>>& buffer, long long idx)> _run; // MEM version
@@ -163,6 +165,7 @@ public:
     void run_chunk_chunk(vector<complex<double>> &);
     void run_nonchunk_chunk(vector<complex<double>> &);
     void run_nonchunk_nonchunk(vector<complex<double>> &);
+    void run_mpi_nonchunk(vector<complex<double>>&,vector<complex<double>>&,vector<complex<double>>&,vector<complex<double>>&,int);
     void run_mpi_chunk(vector<complex<double>>&,vector<complex<double>>&,long long,long long,int);
 };
 
@@ -429,6 +432,7 @@ public:
     void run_chunk_chunk(complex<double> *);
     void run_nonchunk_chunk(complex<double> *);
     void run_nonchunk_nonchunk(complex<double> *);
+    void run_mpi_nonchunk(complex<double>*,complex<double>*,complex<double>*,complex<double>*,int);
     void run_mpi_chunk(complex<double>*,complex<double>*,long long,long long,int);
 };
 

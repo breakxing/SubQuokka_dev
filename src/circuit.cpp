@@ -621,9 +621,16 @@ U2_Gate::U2_Gate(vector<int> targ, vector<complex<double>> matrix): TWO_QUBIT_GA
         res = (b3 << 3) | (b4 << 2) | (b1 << 1) | b2;
         coeff[i] = matrix[res];
     }
-    if(mpi_count == 1 && chunk_count == 1)
+    if(mpi_count)
     {
-        bind_gate_mpi_1(U2_Gate)
+        if(chunk_count)
+        {
+            bind_gate_mpi_1(U2_Gate)
+        }
+        else
+        {
+            run_mpi_u2_nonchunk_io = bind(&U2_Gate::run_mpi_nonchunk,this,_1,_2,_3,_4,_5);
+        }
     }
     else
     {
@@ -650,6 +657,11 @@ void U2_Gate::run_nonchunk_nonchunk(vector<complex<double>> &buffer){
     nonchunk_nonchunk_gate(init_off4(int, 0, half_off_0, half_off_1, (half_off_0 + half_off_1)),
                     update_off4(1), 
                     U2Gate)
+}
+
+void U2_Gate::run_mpi_nonchunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,vector<complex<double>>&buffer3,vector<complex<double>>&buffer4,int round)
+{
+    mpi_gate(init_off4(int, 0, 0, 0, 0),round,update_off4(1),U2GENERAL)
 }
 
 void U2_Gate::run_mpi_chunk(vector<complex<double>>&buffer1,vector<complex<double>>&buffer2,long long offset0,long long offset1,int round){
@@ -2151,9 +2163,16 @@ U2_Gate_DIO::U2_Gate_DIO(vector<int> targ, vector<complex<double>> matrix): TWO_
         res = (b3 << 3) | (b4 << 2) | (b1 << 1) | b2;
         coeff[i] = matrix[res];
     }
-    if(mpi_count == 1 && chunk_count == 1)
+    if(mpi_count)
     {
-        bind_gate_mpi_1_dio(U2_Gate_DIO)
+        if(chunk_count)
+        {
+            bind_gate_mpi_1_dio(U2_Gate_DIO)
+        }
+        else
+        {
+            run_mpi_u2_nonchunk_dio = bind(&U2_Gate_DIO::run_mpi_nonchunk,this,_1,_2,_3,_4,_5);
+        }
     }
     else
     {
@@ -2180,6 +2199,11 @@ void U2_Gate_DIO::run_nonchunk_nonchunk(complex<double> *buffer){
     nonchunk_nonchunk_gate(init_off4(int, 0, half_off_0, half_off_1, (half_off_0 + half_off_1)),
                     update_off4(1), 
                     U2Gate)
+}
+
+void U2_Gate_DIO::run_mpi_nonchunk(complex<double>*buffer1,complex<double>*buffer2,complex<double>*buffer3,complex<double>*buffer4,int round)
+{
+    mpi_gate(init_off4(int, 0, 0, 0, 0),round,update_off4(1),U2GENERAL)
 }
 
 void U2_Gate_DIO::run_mpi_chunk(complex<double>*buffer1,complex<double>*buffer2,long long offset0,long long offset1,int round){

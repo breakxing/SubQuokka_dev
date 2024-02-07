@@ -38,7 +38,7 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
             int rank3 = rank0 | rank_mask_0 | rank_mask_1;
             unordered_map<int,int>rank_mapping{{rank0,0},{rank1,1},{rank2,2},{rank3,3}};
             int rank_order = rank_mapping[env.rank];
-            int per_chunk = min(env.thread_state / env.chunk_state,(long long)env.MPI_buffer_size);
+            int per_chunk = min(env.thread_state / env.chunk_state,(long long)(env.MPI_buffer_size >> 2));
             vector<MPI_Request*>request_send = {&task.request1_send,&task.request2_send,&task.request3_send};
             vector<MPI_Request*>request_recv = {&task.request1_recv,&task.request2_recv,&task.request3_recv};
             vector<vector<complex<double>>*>buffer_recv_using = {&task.buffer2,&task.buffer3,&task.buffer4};
@@ -290,12 +290,12 @@ void MEM_Runner::MPI_two_qubit_gate_diagonal(Gate* &g)
     }
     else
     {
-        unsigned long long stride = env.qubit_offset[g->targs[0]] << 1;
+        long long stride = env.qubit_offset[g->targs[0]] << 1;
         if(g->name == "CPhase_Gate_MEM")
         {
             if(env.rank < (1 <<(g->targs[1] - seg.N))) return;
             #pragma omp parallel for schedule(static)
-            for(unsigned long long i = 0;i < (1ULL << seg.N);i+=stride)
+            for(long long i = 0;i < (1LL << seg.N);i+=stride)
             {
                 MPI_CPhase(g,i);
             }

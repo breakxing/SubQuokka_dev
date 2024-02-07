@@ -41,12 +41,7 @@ class IO_Runner: public Simulator::circuitRunner {
     void setFD_sub(thread_IO_task &);
     void MPI_Swap(thread_IO_task &,Gate * &);
     void MPI_gate_scheduler(thread_IO_task &,Gate * &);
-    void _two_gate_mpi_read1_recv1(thread_IO_task &,Gate * &);
     void _mpi_one_gate_inner(thread_IO_task &,Gate * &);
-    void _thread_read2_recv2(thread_IO_task &,Gate * &,int,long long);
-    void _thread_read1_recv3(thread_IO_task &,Gate * &,int);
-    void _thread_no_exec_MPI(thread_IO_task &,int round);
-    int Get_Next_Undone_Buffer_index(vector<MPI_Request> &,vector<bool>&,int ,int);
     void update_offset(thread_IO_task &,long long&);
     void inner_all_thread(thread_IO_task &,Gate * &,long long,int);
     void all_thread_drive_scheduler(thread_IO_task &,Gate * &);

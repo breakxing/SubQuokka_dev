@@ -120,7 +120,7 @@ inline int findCorrespond(int tid, int targ) {
 
 thread_IO_task::thread_IO_task(int tid,int MPI_buffer_size) {
 
-    request.resize(MPI_buffer_size);
+    request.resize(MPI_buffer_size << 1);
     for (int i = 0; i < seg.chunk; i++) {
         fd_table.push_back(tid);
         fd_offset_table.push_back(0);
