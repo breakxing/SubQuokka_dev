@@ -67,19 +67,19 @@ void IO_Runner::all_thread_drive_scheduler(thread_IO_task &task,Gate * &g)
             task.fd_using = {env.fd_arr[fd0],env.fd_arr[fd0],env.fd_arr[fd1],env.fd_arr[fd1]};
             long long base1 = 0;
             long long base2 = env.qubit_size[targ[0]];
-            bool cond1 = env.thread_state == env.qubit_offset[targ[0] + 1];
+            bool cond1 = env.thread_state == (env.qubit_offset[targ[0]]) << 1;
             bool cond2 = env.chunk_state == env.qubit_offset[targ[0]];
-            func_loop_size = (cond1 && !cond2)?env.qubit_size[targ[0] - 1] : env.qubit_size[targ[0]];
+            func_loop_size = (cond1 && !cond2)?(env.qubit_size[targ[0]] >> 1) : env.qubit_size[targ[0]];
             if(cond1 && cond2 && tid == fd1) return;
             task.fd_offset_using = {base1,base2,base1,base2};
-            if(cond1 && !cond2 && tid == fd1) task.fd_offset_using = {base1 + (env.qubit_size[targ[0] - 1]),base2 + (env.qubit_size[targ[0] - 1]),base1 + (env.qubit_size[targ[0] - 1]),base2 + (env.qubit_size[targ[0] - 1])};
+            if(cond1 && !cond2 && tid == fd1) task.fd_offset_using = {base1 + (env.qubit_size[targ[0]] >> 1),base2 + (env.qubit_size[targ[0]] >> 1),base1 + (env.qubit_size[targ[0]] >> 1),base2 + (env.qubit_size[targ[0]] >> 1)};
             if(!cond1 && tid == fd1) task.fd_offset_using = {base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1),base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1)};
             task.gate_buffer_using = {0,1,2,3};
             if(cond1)
                 inner_all_thread(task,g,func_loop_size,4);
             else
             {
-                for(long long cur_offset = 0;cur_offset < (env.thread_size >> 1);cur_offset += env.qubit_size[targ[0] + 1])
+                for(long long cur_offset = 0;cur_offset < (env.thread_size >> 1);cur_offset += env.qubit_size[targ[0]] << 1)
                 {
                     inner_all_thread(task,g,env.qubit_size[targ[0]],4);
                     update_offset(task,env.qubit_size[targ[0]]);
@@ -135,19 +135,19 @@ void IO_Runner::all_thread_drive_vs2_2(thread_IO_task &task,Gate * &g)
         task.fd_using = {env.fd_arr[fd0],env.fd_arr[fd0],env.fd_arr[fd1],env.fd_arr[fd1]};
         long long base1 = 0;
         long long base2 = env.qubit_size[targ[2]];
-        bool cond1 = env.thread_state == env.qubit_offset[targ[2] + 1];
+        bool cond1 = env.thread_state == (env.qubit_offset[targ[2]] << 1);
         bool cond2 = env.chunk_state == env.qubit_offset[targ[2]];
-        func_loop_size = (cond1 && !cond2)?env.qubit_size[targ[2] - 1] : env.qubit_size[targ[2]];
+        func_loop_size = (cond1 && !cond2)?(env.qubit_size[targ[2]] >> 1) : env.qubit_size[targ[2]];
         if(cond1 && cond2 && tid == fd1) return;
         task.fd_offset_using = {base1,base2,base1,base2};
-        if(cond1 && !cond2 && tid == fd1) task.fd_offset_using = {base1 + (env.qubit_size[targ[2] - 1]),base2 + (env.qubit_size[targ[2] - 1]),base1 + (env.qubit_size[targ[2] - 1]),base2 + (env.qubit_size[targ[2] - 1])};
+        if(cond1 && !cond2 && tid == fd1) task.fd_offset_using = {base1 + (env.qubit_size[targ[2]] >> 1),base2 + (env.qubit_size[targ[2]] >> 1),base1 + (env.qubit_size[targ[2]] >> 1),base2 + (env.qubit_size[targ[2]] >> 1)};
         if(!cond1 && tid == fd1) task.fd_offset_using = {base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1),base1 + (env.thread_size >> 1),base2 + (env.thread_size >> 1)};
         task.gate_buffer_using = {0,1,2,3};
         if(cond1)
             inner_all_thread(task,g,func_loop_size,4);
         else
         {
-            for(long long cur_offset = 0;cur_offset < (env.thread_size >> 1);cur_offset += env.qubit_size[targ[2] + 1])
+            for(long long cur_offset = 0;cur_offset < (env.thread_size >> 1);cur_offset += env.qubit_size[targ[2]] << 1)
             {
                 inner_all_thread(task,g,env.qubit_size[targ[2]],4);
                 update_offset(task,env.qubit_size[targ[2]]);
@@ -331,7 +331,7 @@ void IO_Runner::MPI_Swap(thread_IO_task &task,Gate * &g)
         int total_chunk_per_thread = (env.thread_state >> 1) / env.chunk_state;
         int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
         stack<unsigned long long>st;
-        for(long long i = 0;i < loop_bound;i+=env.qubit_size[g->targs[0] + 1])
+        for(long long i = 0;i < loop_bound;i+=env.qubit_size[g->targs[0]] << 1)
         {
             for(long long j = 0;j < env.qubit_size[g->targs[0]];j+=env.chunk_size)
             {
@@ -715,7 +715,7 @@ void IO_Runner::MPI_two_qubit_gate_diagonal(thread_IO_task &task,Gate * &g)
             if(env.rank < partner_rank) return;
             task.fd_using = {env.fd_arr[task.tid]};
             task.gate_buffer_using = {3};
-            for(long long cur_offset = 0;cur_offset < env.thread_size;cur_offset += env.qubit_size[g->targs[0] + 1])
+            for(long long cur_offset = 0;cur_offset < env.thread_size;cur_offset += env.qubit_size[g->targs[0]] << 1)
             {
                 task.fd_offset_using = {cur_offset + env.qubit_size[g->targs[0]]};
                 MPI_special_gate_inner(task,g,env.qubit_size[g->targs[0]],1);
@@ -726,7 +726,7 @@ void IO_Runner::MPI_two_qubit_gate_diagonal(thread_IO_task &task,Gate * &g)
             int rank_member = (env.rank > partner_rank);
             task.fd_using = {env.fd_arr[task.tid],env.fd_arr[task.tid]};
             task.gate_buffer_using = {rank_member << 1,(rank_member << 1) | 1};
-            for(long long cur_offset = 0;cur_offset < env.thread_size;cur_offset += env.qubit_size[g->targs[0] + 1])
+            for(long long cur_offset = 0;cur_offset < env.thread_size;cur_offset += env.qubit_size[g->targs[0]] << 1)
             {
                 task.fd_offset_using = {cur_offset,cur_offset + env.qubit_size[g->targs[0]]};
                 MPI_special_gate_inner(task,g,env.qubit_size[g->targs[0]],2);

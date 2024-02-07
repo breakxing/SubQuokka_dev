@@ -211,7 +211,7 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
             vector<complex<double>>*buffer2_ptr;
             vector<complex<double>>*buffer3_ptr;
             vector<complex<double>>*buffer4_ptr;
-            for(long long i = 0;i < env.thread_state;i+=env.qubit_offset[g->targs[0] + 1])
+            for(long long i = 0;i < env.thread_state;i+=env.qubit_offset[g->targs[0]] << 1)
             {
                 for(long long j = 0;j < env.qubit_offset[g->targs[0]];j+=per_chunk * env.chunk_state)
                 {
@@ -366,7 +366,7 @@ void MEM_Runner::MPI_Swap_1_1(thread_MEM_task &task,Gate* &g)
             unsigned long long one_time_state = env.qubit_offset[g->targs[0]];
             vector<complex<double>>buffer_tmp(per_state);
             stack<unsigned long long>st;
-            for(long long i = 0;i < env.thread_state;i+=env.qubit_offset[g->targs[0] + 1])
+            for(long long i = 0;i < env.thread_state;i+=env.qubit_offset[g->targs[0]] << 1)
             {
                 long long startIdx = task.tid * env.thread_state + i + (env.rank < task.partner_using[0]) * env.qubit_offset[g->targs[0]];
                 copy(buffer.begin() + startIdx,buffer.begin() + startIdx + one_time_state,buffer_tmp.begin() + st.size() * one_time_state);
@@ -424,7 +424,7 @@ void MEM_Runner::MPI_Swap_1_1(thread_MEM_task &task,Gate* &g)
                 per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
                 vector<complex<double>>buffer_tmp(per_chunk * env.chunk_state);
                 stack<unsigned long long>st;
-                for(long long i = 0;i < env.thread_state;i+=env.qubit_offset[g->targs[0] + 1])
+                for(long long i = 0;i < env.thread_state;i+=env.qubit_offset[g->targs[0]] << 1)
                 {
                     for(long long j = 0;j < env.qubit_offset[g->targs[0]];j+=env.chunk_state)
                     {
