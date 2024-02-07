@@ -325,7 +325,6 @@ void DIO_Runner::run(vector<Gate *> &circuit) {
         for (auto &g : circuit) {
             // if(tid == 0)
             //     cout << ++count << "th gate doing...... " << endl;
-            task.has_non_blocking = false;
             vector<int> targ = g->targs;  // increasing
             int mpi_count = g->mpi_count;
             int file_count = g->file_count;
@@ -385,12 +384,6 @@ void DIO_Runner::run(vector<Gate *> &circuit) {
             }
             if(file_count)
             {
-                #pragma omp barrier
-            }
-            if(task.has_non_blocking)
-            {
-                #pragma omp master
-                MPI_Barrier(MPI_COMM_WORLD);
                 #pragma omp barrier
             }
         }

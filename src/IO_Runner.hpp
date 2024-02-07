@@ -20,7 +20,6 @@ public:
     std::vector<long long> fd_offset_using;
     std::vector<int>partner_using;
     std::vector<int>gate_buffer_using;
-    bool has_non_blocking;
     // std::vector<std::vector<Gate>> subcircuits;
 
     double MPI_gate_time;
