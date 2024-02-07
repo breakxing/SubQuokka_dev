@@ -201,46 +201,45 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
         {
             int rank_mask_1 = 1 << (g->targs[1] - seg.N);
             int partner_rank = env.rank ^ rank_mask_1;
-            int total_chunk_per_thread = env.qubit_offset[g->targs[0]] / env.chunk_state;
+            int total_chunk_per_thread = (env.thread_state >> 1) / env.chunk_state;
             int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size >> 1);
-            long long pos0;
-            long long pos1;
-            long long pos2;
-            long long pos3;
-            vector<complex<double>>*buffer1_ptr;
-            vector<complex<double>>*buffer2_ptr;
-            vector<complex<double>>*buffer3_ptr;
-            vector<complex<double>>*buffer4_ptr;
+            vector<complex<double>>buffer_tmp0(per_chunk * env.chunk_state);
+            vector<complex<double>>buffer_tmp1(per_chunk * env.chunk_state);
+            vector<complex<double>>*buffer1_ptr = &buffer_tmp0;
+            vector<complex<double>>*buffer2_ptr = &buffer_tmp1;
+            vector<complex<double>>*buffer3_ptr = &task.buffer2;
+            vector<complex<double>>*buffer4_ptr = &task.buffer3;
+            if(env.rank > partner_rank)
+            {
+                swap(buffer1_ptr,buffer3_ptr);
+                swap(buffer2_ptr,buffer4_ptr);
+            }
+            stack<unsigned long long>st0;
+            stack<unsigned long long>st1;
             for(long long i = 0;i < env.thread_state;i+=env.qubit_offset[g->targs[0]] << 1)
             {
-                for(long long j = 0;j < env.qubit_offset[g->targs[0]];j+=per_chunk * env.chunk_state)
+                for(long long j = 0;j < env.qubit_offset[g->targs[0]];j+=env.chunk_state)
                 {
                     long long startIdx0 = task.tid * env.thread_state + i + j;
                     long long startIdx1 = task.tid * env.thread_state + i + j + env.qubit_offset[g->targs[0]];
-                    pos0 = startIdx0;
-                    pos1 = startIdx1;
-                    pos2 = 0;
-                    pos3 = 0;
-                    buffer1_ptr = &buffer;
-                    buffer2_ptr = &buffer;
-                    buffer3_ptr = &task.buffer2;
-                    buffer4_ptr = &task.buffer3;
-                    MPI_Isend(&buffer[startIdx0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request1_send);
-                    MPI_Isend(&buffer[startIdx1],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request2_send);
-                    MPI_Irecv(&task.buffer2[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request1_recv);
-                    MPI_Irecv(&task.buffer3[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request2_recv);
-                    MPI_Wait(&task.request1_send,MPI_STATUS_IGNORE);
-                    MPI_Wait(&task.request2_send,MPI_STATUS_IGNORE);
-                    MPI_Wait(&task.request1_recv,MPI_STATUS_IGNORE);
-                    MPI_Wait(&task.request2_recv,MPI_STATUS_IGNORE);
-                    if(env.rank > partner_rank)
+                    copy(buffer.begin() + startIdx0,buffer.begin() + startIdx0 + env.chunk_state,buffer_tmp0.begin() + st0.size() * env.chunk_state);
+                    copy(buffer.begin() + startIdx1,buffer.begin() + startIdx1 + env.chunk_state,buffer_tmp1.begin() + st1.size() * env.chunk_state);
+                    st0.push(startIdx0);
+                    st1.push(startIdx1);
+                    if(st0.size() == (unsigned long int) per_chunk)
                     {
-                        swap(buffer1_ptr,buffer3_ptr);
-                        swap(buffer2_ptr,buffer4_ptr);
-                        swap(pos0,pos2);
-                        swap(pos1,pos3);
+                        MPI_Isend(&buffer_tmp0[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request1_send);
+                        MPI_Isend(&buffer_tmp1[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request2_send);
+                        MPI_Irecv(&task.buffer2[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request1_recv);
+                        MPI_Irecv(&task.buffer3[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,partner_rank,task.tid,MPI_COMM_WORLD,&task.request2_recv);
+                        MPI_Wait(&task.request1_send,MPI_STATUS_IGNORE);
+                        MPI_Wait(&task.request2_send,MPI_STATUS_IGNORE);
+                        MPI_Wait(&task.request1_recv,MPI_STATUS_IGNORE);
+                        MPI_Wait(&task.request2_recv,MPI_STATUS_IGNORE);
+                        g->run_mem_u2(*buffer1_ptr,*buffer2_ptr,*buffer3_ptr,*buffer4_ptr,0,0,0,0,per_chunk * env.chunk_state);
+                        MPI_Swap_restore(buffer_tmp0,st0,env.chunk_state);
+                        MPI_Swap_restore(buffer_tmp1,st1,env.chunk_state);
                     }
-                    g->run_mem_u2(*buffer1_ptr,*buffer2_ptr,*buffer3_ptr,*buffer4_ptr,pos0,pos1,pos2,pos3,per_chunk * env.chunk_state);
                 }
             }
         }
