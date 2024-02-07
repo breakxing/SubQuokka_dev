@@ -397,7 +397,6 @@ void DIO_Runner::run(vector<Gate *> &circuit) {
     #pragma omp barrier
     if(task.tid == 0)
     {
-        const char* ip = env.rank?"42":"48";
         printf("Node%d takes %lfs to execute %d IO gate. Average %lfs\n",env.rank,task.pure_IO_gate_time,task.pure_IO_gate_count,task.pure_IO_gate_time / task.pure_IO_gate_count);
         printf("Node%d takes %lfs to execute %d MPI gate. Average %lfs\n",env.rank,task.MPI_gate_time,task.MPI_gate_count,task.MPI_gate_time / task.MPI_gate_count);
     }
@@ -495,7 +494,6 @@ void DIO_Runner::run(vector<vector<Gate *>> &subcircuits) {
         #pragma omp barrier
         if(task.tid == 0)
         {
-            const char* ip = env.rank?"42":"48";
             printf("Node%d takes %lfs to execute %d IO blocks & %d IO gate. Average %lfs/gate\n",env.rank,task.pure_IO_gate_time,task.sub_IO_block_count,task.pure_IO_gate_count,task.pure_IO_gate_time / task.pure_IO_gate_count);
             printf("Node%d takes %lfs to execute %d MPI blocks & %d MPI gate. Average %lfs/gate\n",env.rank,task.MPI_gate_time,task.sub_MPI_block_count,task.MPI_gate_count,task.MPI_gate_time / task.MPI_gate_count);
         }
