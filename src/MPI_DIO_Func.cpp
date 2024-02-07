@@ -330,7 +330,7 @@ void DIO_Runner::MPI_Swap(thread_DIO_task &task,Gate * &g)
         task.fd_using = {env.fd_arr[task.tid]};
         int total_chunk_per_thread = (env.thread_state >> 1) / env.chunk_state;
         int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
-        stack<unsigned long long>st;
+        stack<long long>st;
         for(long long i = 0;i < loop_bound;i+=env.qubit_size[g->targs[0]] << 1)
         {
             for(long long j = 0;j < env.qubit_size[g->targs[0]];j+=env.chunk_size)
