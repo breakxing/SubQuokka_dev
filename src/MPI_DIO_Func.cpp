@@ -157,7 +157,7 @@ void DIO_Runner::all_thread_drive_vs2_2(thread_DIO_task &task,Gate * &g)
 }
 void DIO_Runner::inner_all_thread(thread_DIO_task &task,Gate * &g,long long func_loop_size,int round)
 {
-    for(long long i = 0;i < func_loop_size;i += env.chunk_size)
+    for(long long cur_offset = 0;cur_offset < func_loop_size;cur_offset += env.chunk_size)
     {
         for(int j = 0;j < round;j++)
         {
@@ -179,7 +179,7 @@ void DIO_Runner::MPI_special_gate_inner(thread_DIO_task &task,Gate * &g,long lon
     int lowest_idx = 3;
     if(g->name == "CPhase_Gate_DIO" && isMpi(g->targs[1]) && isFile(g->targs[0]))
         stride = env.chunk_size << 1;
-    for(long long i = 0;i < func_loop_size;i += stride)
+    for(long long cur_offset = 0;cur_offset < func_loop_size;cur_offset += stride)
     {
         for(int j = 0;j < round;j++)
         {
@@ -329,11 +329,11 @@ void DIO_Runner::MPI_Swap(thread_DIO_task &task,Gate * &g)
         int total_chunk_per_thread = (env.thread_state >> 1) / env.chunk_state;
         int per_chunk = min(total_chunk_per_thread,env.MPI_buffer_size);
         stack<long long>st;
-        for(long long i = 0;i < loop_bound;i+=env.qubit_size[g->targs[0]] << 1)
+        for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset+=env.qubit_size[g->targs[0]] << 1)
         {
             for(long long j = 0;j < env.qubit_size[g->targs[0]];j+=env.chunk_size)
             {
-                long long startIdx = i + j + (env.rank < task.partner_using[0]) * env.qubit_size[g->targs[0]];
+                long long startIdx = cur_offset + j + (env.rank < task.partner_using[0]) * env.qubit_size[g->targs[0]];
                 if(pread(task.fd_using[0],&task.buffer1[st.size() * env.chunk_state],env.chunk_size,startIdx));
                 st.push(startIdx);
                 if(st.size() == (unsigned long int)per_chunk)
