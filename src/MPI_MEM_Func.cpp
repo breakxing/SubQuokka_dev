@@ -95,21 +95,6 @@ void MEM_Runner::MPI_gate_scheduler(thread_MEM_task &task,Gate * &g)
                 }
                 g->run_mem_u2(*buffer1_ptr,*buffer2_ptr,*buffer3_ptr,*buffer4_ptr,pos0,pos1,pos2,pos3,per_chunk * env.chunk_state);
             }
-            // for(int i = task.tid * env.thread_state;i < ((task.tid + 1) * env.thread_state);i+=per_chunk * env.chunk_state)
-            // {
-            //     for(int j = 0;j < 3;j++)
-            //     {
-            //         MPI_Isend(&buffer[i],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[j],task.tid,MPI_COMM_WORLD,&(*request_send[j]));
-            //         MPI_Irecv(&(*buffer_recv_using[j])[0],per_chunk * env.chunk_state,MPI_DOUBLE_COMPLEX,task.partner_using[j],task.tid,MPI_COMM_WORLD,&(*request_recv[j]));
-            //     }
-            //     for(int j = 0;j < 3;j++)
-            //     {
-            //         MPI_Wait(&(*request_send[j]),MPI_STATUS_IGNORE);
-            //         MPI_Wait(&(*request_recv[j]),MPI_STATUS_IGNORE);
-            //     }
-            //     *local_pos = i;
-            //     g->run_mem_u2(*buffer1_ptr,*buffer2_ptr,*buffer3_ptr,*buffer4_ptr,pos0,pos1,pos2,pos3,per_chunk * env.chunk_state);
-            // }
         }
         else if(isFile(g->targs[0]))
         {
