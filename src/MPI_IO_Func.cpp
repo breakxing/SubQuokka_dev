@@ -349,15 +349,54 @@ void IO_Runner::MPI_Swap(thread_IO_task &task,Gate * &g)
             }
         }
     }
-    else //Use new algo
+    else
     {
         task.fd_using = {env.fd_arr[task.tid]};
         task.fd_offset_using = {0};
-        loop_stride = env.chunk_size * min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
-        for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+        // loop_stride = env.chunk_size * min((long long) MPI_buffer_size,env.thread_state / env.chunk_state);
+        // for(long long cur_offset = 0;cur_offset < loop_bound;cur_offset += loop_stride)
+        // {
+        //     _mpi_one_gate_inner(task,g);
+        //     update_offset(task,loop_stride);
+        // }
+        long long total_state_per_thread = env.thread_state >> 1;
+        long long per_state_transfer = min(total_state_per_thread,(env.MPI_buffer_size >> 1) * env.chunk_state);
+        long long one_time_copy_state = env.qubit_offset[g->targs[0]];
+        stack<long long>st_tmp;
+        stack<long long>st_file_off;
+        long long buffer1_off = 0;
+        for(long long i = 0;i < env.thread_size;i+=env.chunk_size)
         {
-            _mpi_one_gate_inner(task,g);
-            update_offset(task,loop_stride);
+            if(pread(task.fd_using[0],&task.buffer1[buffer1_off],env.chunk_size,task.fd_offset_using[0]));
+            buffer1_off+=env.chunk_state;
+            st_file_off.push(i);
+            for(long long chunk_off = 0;chunk_off < env.chunk_state;chunk_off+=(one_time_copy_state << 1))
+            {
+                long long startIdx0 = (buffer1_off - env.chunk_state) + chunk_off + (env.rank < task.partner_using[0]) * one_time_copy_state;
+                long long startIdx1 = st_tmp.size() * one_time_copy_state;
+                copy(task.buffer1.begin() + startIdx0,task.buffer1.begin() + startIdx0 + one_time_copy_state,task.buffer2.begin() + startIdx1);
+                st_tmp.push(startIdx0);
+                if(st_tmp.size() * one_time_copy_state == (unsigned long int)per_state_transfer)
+                {
+                    MPI_Sendrecv(&task.buffer2[0],per_state_transfer,MPI_DOUBLE_COMPLEX,task.partner_using[0],task.tid,&task.buffer3[0],per_state_transfer,MPI_DOUBLE_COMPLEX,task.partner_using[0],task.tid,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                    long long buffer_size = per_state_transfer;
+                    buffer_size-=one_time_copy_state;
+                    long long chunk_cnt = buffer1_off / env.chunk_state;
+                    while(!st_tmp.empty())
+                    {
+                        long long off = st_tmp.top();st_tmp.pop();
+                        copy(task.buffer3.begin() + buffer_size,task.buffer3.begin() + buffer_size + one_time_copy_state,task.buffer1.begin() + off);
+                        buffer_size-=one_time_copy_state;
+                    }
+                    for(long long j = chunk_cnt - 1;j >= 0;j--)
+                    {
+                        if(pwrite(task.fd_using[0],&task.buffer1[j * env.chunk_state],env.chunk_size,st_file_off.top()));
+                        st_file_off.pop();
+                    }
+                    buffer1_off = 0;
+                }
+            }
+            update_offset(task,env.chunk_size);
         }
     }
 }
